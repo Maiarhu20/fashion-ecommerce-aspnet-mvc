@@ -11,6 +11,16 @@
 *.sln.docstates
 *.env
 
+# Configuration and sensitive files
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+
+
+
+# Database initializer
+DbInitializer.cs
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

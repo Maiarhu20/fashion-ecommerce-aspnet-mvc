@@ -1,0 +1,620 @@
+﻿@model Core.DTOs.Checkout.WalletPaymentViewModel
+@{
+    ViewData["Title"] = "Mobile Wallet Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .wallet-container {
+        padding: 20px 0;
+        min-height: 80vh;
+    }
+
+    .wallet-card {
+        border-radius: 16px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+        border: none;
+        overflow: hidden;
+    }
+
+    .wallet-header {
+        background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+        padding: 25px 20px;
+    }
+
+    .order-summary-wallet {
+        background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 2px solid #e91e63;
+        text-align: center;
+    }
+
+    .wallet-option {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        padding: 20px 15px;
+        background: #fff;
+        border: 2px solid #e0e0e0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .wallet-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .wallet-option:hover::before {
+            opacity: 0.1;
+        }
+
+        .wallet-option.active::before {
+            opacity: 0.15;
+        }
+
+        .wallet-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .wallet-option i,
+        .wallet-option span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .wallet-option i {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .wallet-option:hover i {
+            transform: scale(1.1);
+        }
+
+        .wallet-option span {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: block;
+        }
+
+        /* Vodafone Cash - Red */
+        .wallet-option[data-provider="vodafone"] {
+            border-color: #e0e0e0;
+        }
+
+            .wallet-option[data-provider="vodafone"]::before {
+                background: #E60000;
+            }
+
+            .wallet-option[data-provider="vodafone"]:hover,
+            .wallet-option[data-provider="vodafone"].active {
+                border-color: #E60000;
+            }
+
+            .wallet-option[data-provider="vodafone"] i {
+                color: #E60000;
+            }
+
+            .wallet-option[data-provider="vodafone"].active {
+                box-shadow: 0 4px 15px rgba(230, 0, 0, 0.3);
+            }
+
+        /* Orange Money - Orange */
+        .wallet-option[data-provider="orange"] {
+            border-color: #e0e0e0;
+        }
+
+            .wallet-option[data-provider="orange"]::before {
+                background: #FF6600;
+            }
+
+            .wallet-option[data-provider="orange"]:hover,
+            .wallet-option[data-provider="orange"].active {
+                border-color: #FF6600;
+            }
+
+            .wallet-option[data-provider="orange"] i {
+                color: #FF6600;
+            }
+
+            .wallet-option[data-provider="orange"].active {
+                box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            }
+
+        /* Etisalat Cash - Green */
+        .wallet-option[data-provider="etisalat"] {
+            border-color: #e0e0e0;
+        }
+
+            .wallet-option[data-provider="etisalat"]::before {
+                background: #00A651;
+            }
+
+            .wallet-option[data-provider="etisalat"]:hover,
+            .wallet-option[data-provider="etisalat"].active {
+                border-color: #00A651;
+            }
+
+            .wallet-option[data-provider="etisalat"] i {
+                color: #00A651;
+            }
+
+            .wallet-option[data-provider="etisalat"].active {
+                box-shadow: 0 4px 15px rgba(0, 166, 81, 0.3);
+            }
+
+        /* WE Pay - Purple */
+        .wallet-option[data-provider="we"] {
+            border-color: #e0e0e0;
+        }
+
+            .wallet-option[data-provider="we"]::before {
+                background: #6F2C91;
+            }
+
+            .wallet-option[data-provider="we"]:hover,
+            .wallet-option[data-provider="we"].active {
+                border-color: #6F2C91;
+            }
+
+            .wallet-option[data-provider="we"] i {
+                color: #6F2C91;
+            }
+
+            .wallet-option[data-provider="we"].active {
+                box-shadow: 0 4px 15px rgba(111, 44, 145, 0.3);
+            }
+
+    .phone-input-group {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+        .phone-input-group .input-group-text {
+            background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 12px 20px;
+        }
+
+        .phone-input-group input {
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+            .phone-input-group input:focus {
+                box-shadow: none;
+                outline: none;
+            }
+
+    .btn-pay-wallet {
+        background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+        border: none;
+        padding: 15px 40px;
+        font-weight: 600;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+        .btn-pay-wallet:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+            background: linear-gradient(135deg, #c2185b 0%, #ad1457 100%);
+        }
+
+        .btn-pay-wallet:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .instructions-box {
+        background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid #e91e63;
+    }
+
+        .instructions-box h6 {
+            color: #e91e63;
+            margin-bottom: 15px;
+        }
+
+        .instructions-box ol li {
+            margin-bottom: 8px;
+            color: #424242;
+        }
+
+    @@media (max-width: 768px) {
+        .wallet-container
+
+    {
+        padding: 15px 0;
+    }
+
+    .wallet-header {
+        padding: 20px 15px;
+    }
+
+        .wallet-header h4 {
+            font-size: 1.2rem;
+        }
+
+    .order-summary-wallet {
+        padding: 15px;
+    }
+
+        .order-summary-wallet h3 {
+            font-size: 1.8rem;
+        }
+
+    .wallet-option {
+        padding: 15px 10px;
+    }
+
+        .wallet-option i {
+            font-size: 2rem;
+        }
+
+        .wallet-option span {
+            font-size: 0.85rem;
+        }
+
+    .phone-input-group input {
+        font-size: 1rem;
+    }
+
+    .btn-pay-wallet {
+        width: 100%;
+        padding: 14px 30px;
+    }
+
+    .instructions-box {
+        padding: 15px;
+    }
+
+        .instructions-box ol {
+            font-size: 0.9rem;
+            padding-left: 20px;
+        }
+
+    }
+
+    @@media (max-width: 576px) {
+        .wallet-header h4
+
+    {
+        font-size: 1.1rem;
+    }
+
+    .order-summary-wallet h3 {
+        font-size: 1.5rem;
+    }
+
+    .wallet-option i {
+        font-size: 1.8rem;
+    }
+
+    .wallet-option span {
+        font-size: 0.8rem;
+    }
+
+    .instructions-box ol {
+        font-size: 0.85rem;
+    }
+
+    }
+</style>
+
+<div class="container wallet-container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+            <div class="card wallet-card">
+                <div class="wallet-header">
+                    <h4 class="mb-0 text-white">
+                        <i class="bi bi-phone me-2"></i>
+                        Mobile Wallet Payment
+                    </h4>
+                </div>
+
+                <div class="card-body p-3 p-md-4">
+                    <div class="order-summary-wallet">
+                        <p class="text-muted mb-1 small">Order Number</p>
+                        <h5 class="mb-3">@Model.OrderNumber</h5>
+                        <h3 class="text-danger mb-0">EGP @Model.GrandTotal.ToString("N2")</h3>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-3">
+                            <i class="bi bi-wallet me-2"></i>Select Your Wallet
+                        </label>
+                        <div class="row g-2 g-md-3">
+                            <div class="col-6">
+                                <div class="wallet-option active" data-provider="vodafone">
+                                    <i class="bi bi-phone"></i>
+                                    <span>Vodafone Cash</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="wallet-option" data-provider="orange">
+                                    <i class="bi bi-phone"></i>
+                                    <span>Orange Money</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="wallet-option" data-provider="etisalat">
+                                    <i class="bi bi-phone"></i>
+                                    <span>Etisalat Cash</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="wallet-option" data-provider="we">
+                                    <i class="bi bi-phone"></i>
+                                    <span>WE Pay</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="walletPhone" class="form-label fw-bold">
+                            <i class="bi bi-telephone me-1"></i>Wallet Phone Number
+                        </label>
+                        <div class="input-group phone-input-group">
+                            <span class="input-group-text">+20</span>
+                            <input type="tel"
+                                   class="form-control"
+                                   id="walletPhone"
+                                   placeholder="1xxxxxxxxx"
+                                   maxlength="10"
+                                   value="@(Model.CustomerPhone?.Replace("+20", "").Replace("20", "").TrimStart('0') ?? "")">
+                        </div>
+                        <div class="form-text">Enter your wallet phone number (without leading zero)</div>
+                        <div id="phoneError" class="text-danger small mt-1" style="display: none;"></div>
+                    </div>
+
+                    <div id="statusMessage" class="mb-4" style="display: none;"></div>
+
+                    <div class="d-grid mb-4">
+                        <button type="button" class="btn btn-pay-wallet" id="payButton" onclick="initiateWalletPayment()">
+                            <i class="bi bi-wallet2 me-2"></i>Pay EGP @Model.GrandTotal.ToString("N2")
+                        </button>
+                    </div>
+
+                    <div class="instructions-box">
+                        <h6 class="mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            How it works:
+                        </h6>
+                        <ol class="mb-0 ps-3">
+                            <li class="mb-2">Select your wallet provider above</li>
+                            <li class="mb-2">Enter your wallet phone number</li>
+                            <li class="mb-2">Click "Pay" button</li>
+                            <li class="mb-2">You'll receive a notification in your wallet app</li>
+                            <li class="mb-2">Open your wallet app and approve the payment</li>
+                            <li>Enter your wallet PIN to confirm</li>
+                        </ol>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Index", "Checkout")" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Checkout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Waiting Modal -->
+<div class="modal fade" id="waitingModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-danger mb-3" style="width: 3rem; height: 3rem;"></div>
+                <h5 id="modalTitle">Processing Payment</h5>
+                <p id="modalMessage" class="text-muted mb-3">Please check your wallet app and approve the payment...</p>
+                <div id="modalTimer" class="text-muted small"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const orderNumber = '@Model.OrderNumber';
+        let selectedProvider = 'vodafone';
+        let pollingInterval = null;
+        let currentTransactionId = null;
+
+        document.querySelectorAll('.wallet-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.wallet-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                selectedProvider = this.dataset.provider;
+            });
+        });
+
+        // In Views/Checkout/WalletPayment.cshtml
+        function validatePhone() {
+            const phone = document.getElementById('walletPhone').value.trim();
+            const errorDiv = document.getElementById('phoneError');
+            const digits = phone.replace(/\D/g, ''); // Remove non-digits
+
+            // Basic validation
+            if (digits.length === 0) {
+                errorDiv.textContent = 'Phone number is required';
+                errorDiv.style.display = 'block';
+                return null;
+            }
+
+            // Check for Egyptian valid lengths (10 or 11 digits)
+            if ((digits.length === 10 && !digits.startsWith('1')) ||
+                (digits.length === 11 && !digits.startsWith('01')) ||
+                (digits.length !== 10 && digits.length !== 11)) {
+                errorDiv.textContent = 'Please enter a valid Egyptian number (01xxxxxxxxx)';
+                errorDiv.style.display = 'block';
+                return null;
+            }
+
+            errorDiv.style.display = 'none';
+
+            // ✅ FIX: Just return the raw digits. 
+            // The C# backend will handle the formatting logic (ensuring 01... format)
+            return digits;
+        }
+
+        async function initiateWalletPayment() {
+            const phone = validatePhone();
+            if (!phone) return;
+
+            const payButton = document.getElementById('payButton');
+            const statusDiv = document.getElementById('statusMessage');
+
+            payButton.disabled = true;
+            payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            try {
+                const response = await fetch('@Url.Action("ExecuteWalletPayment", "Checkout")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        orderNumber: orderNumber,
+                        walletPhone: phone
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentTransactionId = result.transactionId;
+
+                    if (result.redirectUrl) {
+                        statusDiv.innerHTML = '<div class="alert alert-info"><i class="bi bi-box-arrow-up-right me-2"></i>Redirecting to payment page...</div>';
+                        statusDiv.style.display = 'block';
+                        setTimeout(() => {
+                            window.location.href = result.redirectUrl;
+                        }, 1000);
+                    } else if (result.waitForApproval) {
+                        statusDiv.innerHTML = '<div class="alert alert-warning"><i class="bi bi-hourglass-split me-2"></i>Payment request sent. Please approve in your wallet app...</div>';
+                        statusDiv.style.display = 'block';
+                        showWaitingModal();
+                        startPolling();
+                    }
+                } else {
+                    statusDiv.innerHTML = `<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>${result.message}</div>`;
+                    statusDiv.style.display = 'block';
+                    payButton.disabled = false;
+                    payButton.innerHTML = '<i class="bi bi-wallet2 me-2"></i>Pay EGP @Model.GrandTotal.ToString("N2")';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>Network error. Please check your connection.</div>';
+                statusDiv.style.display = 'block';
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="bi bi-wallet2 me-2"></i>Pay EGP @Model.GrandTotal.ToString("N2")';
+            }
+        }
+
+        function showWaitingModal() {
+            const modal = new bootstrap.Modal(document.getElementById('waitingModal'));
+            modal.show();
+        }
+
+        function hideWaitingModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('waitingModal'));
+            if (modal) modal.hide();
+        }
+
+        function startPolling() {
+            let pollCount = 0;
+            const maxPolls = 120; // 6 minutes
+
+            pollingInterval = setInterval(async () => {
+                pollCount++;
+                const remainingSeconds = (maxPolls - pollCount) * 2;
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+
+                document.getElementById('modalTimer').textContent =
+                    `Checking status... (${minutes}:${seconds.toString().padStart(2, '0')} remaining)`;
+
+                if (pollCount >= maxPolls) {
+                    clearInterval(pollingInterval);
+                    hideWaitingModal();
+                    document.getElementById('statusMessage').innerHTML =
+                        '<div class="alert alert-warning"><i class="bi bi-clock me-2"></i>Payment timeout. Please check your wallet app or contact support.</div>';
+                    document.getElementById('statusMessage').style.display = 'block';
+                    document.getElementById('payButton').disabled = false;
+                    document.getElementById('payButton').innerHTML = '<i class="bi bi-wallet2 me-2"></i>Try Again';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('@Url.Action("CheckPaymentStatus", "Checkout")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({
+                            orderNumber: orderNumber,
+                            transactionId: currentTransactionId
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        clearInterval(pollingInterval);
+                        document.getElementById('modalTitle').textContent = 'Payment Successful! ✓';
+                        document.getElementById('modalMessage').textContent = 'Redirecting to your order confirmation...';
+                        document.getElementById('modalTimer').textContent = '';
+                        setTimeout(() => {
+                            window.location.href = result.redirectUrl;
+                        }, 1500);
+                    } else if (!result.pending) {
+                        clearInterval(pollingInterval);
+                        hideWaitingModal();
+                        document.getElementById('statusMessage').innerHTML =
+                            `<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>${result.message || 'Payment failed'}</div>`;
+                        document.getElementById('statusMessage').style.display = 'block';
+                        document.getElementById('payButton').disabled = false;
+                        document.getElementById('payButton').innerHTML = '<i class="bi bi-wallet2 me-2"></i>Try Again';
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (pollingInterval) clearInterval(pollingInterval);
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}

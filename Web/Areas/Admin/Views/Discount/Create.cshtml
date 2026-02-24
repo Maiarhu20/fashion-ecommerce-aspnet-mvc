@@ -1,0 +1,127 @@
+﻿@model Core.DTOs.Discount.CreateDiscountDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Create Discount Code";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Create New Discount Code</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Code & Discount Type -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Code" class="form-label"></label>
+                                <input asp-for="Code" class="form-control" />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <small class="text-muted">Uppercase letters and numbers only</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DiscountType" class="form-label"></label>
+                                <select asp-for="DiscountType" asp-items="@ViewBag.DiscountTypes" class="form-control"></select>
+                                <span asp-validation-for="DiscountType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Discount Value & Minimum Order -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="DiscountValue" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        @(Model.DiscountType == "Percentage" ? "%" : "EGP")
+                                    </span>
+                                    <input asp-for="DiscountValue" class="form-control" />
+                                </div>
+                                <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MinimumOrderAmount" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">EGP</span>
+                                    <input asp-for="MinimumOrderAmount" class="form-control" />
+                                </div>
+                                <span asp-validation-for="MinimumOrderAmount" class="text-danger"></span>
+                                <small class="text-muted">Leave empty for no minimum</small>
+                            </div>
+                        </div>
+
+                        <!-- Usage Limit & Active Switch -->
+                        <!-- Usage Limit Per Guest -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="UsageLimitPerGuest" class="form-label">Usage Limit Per Guest</label>
+                                <input asp-for="UsageLimitPerGuest" class="form-control" placeholder="e.g., 1" />
+                                <span asp-validation-for="UsageLimitPerGuest" class="text-danger"></span>
+                                <small class="text-muted">How many times each guest can use this code (leave empty for unlimited)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="IsActive" class="form-label">Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                    <label class="form-check-label" asp-for="IsActive">
+                                        @(Model.IsActive ? "Active" : "Inactive")
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ⭐ FIXED DATE/TIME INPUTS (NO SECONDS) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="StartDate" class="form-label">Start Date & Time</label>
+                                <input asp-for="StartDate"
+                                       class="form-control"
+                                       type="datetime-local"
+                                       step="60" /> <!-- ⭐ Forces whole minutes -->
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ExpiryDate" class="form-label">Expiry Date & Time</label>
+                                <input asp-for="ExpiryDate"
+                                       class="form-control"
+                                       type="datetime-local"
+                                       step="60" /> <!-- ⭐ Forces whole minutes -->
+                                <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                                <small class="text-muted">Leave empty for no expiry</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary" style="color:black; background-color:lightgray;">Cancel</a>
+                            <button type="submit" class="btn btn-outline-primary">Create Discount</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Update unit label when discount type changes
+        document.getElementById('DiscountType').addEventListener('change', function() {
+            const type = this.value;
+            const valueInput = document.getElementById('DiscountValue');
+            const unitSpan = valueInput.previousElementSibling;
+
+            unitSpan.textContent = (type === 'Percentage') ? '%' : 'EGP';
+        });
+    </script>
+}

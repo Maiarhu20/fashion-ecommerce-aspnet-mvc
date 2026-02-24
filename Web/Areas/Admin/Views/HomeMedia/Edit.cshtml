@@ -1,0 +1,486 @@
+﻿@model Core.DTOs.HomeMedia.UpdateHomeMediaDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Edit Home Media";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentMediaUrl = ViewBag.CurrentMediaUrl as string ?? "";
+    var hasExistingFile = !string.IsNullOrEmpty(currentMediaUrl);
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Edit Home Media Item</h1>
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-2"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-edit mr-2"></i> Edit Home Media Item</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" asp-route-id="@ViewContext.RouteData.Values["id"]" method="post" enctype="multipart/form-data" id="editForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <input type="hidden" id="currentMediaUrl" value="@currentMediaUrl" />
+
+                        <!-- Media Preview & Upload Card -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="mb-3 text-primary"><i class="fas fa-image mr-2"></i> Media Preview & Upload</h6>
+
+                                <!-- Current Media Preview -->
+                                @if (hasExistingFile)
+                                {
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Current Media</label>
+                                        <div class="current-media-preview">
+                                            @if (Model.MediaType == "Image")
+                                            {
+                                                <div class="image-preview-container text-center p-3 border rounded-lg" style="background-color: #f8f9fa;">
+                                                    <img src="@currentMediaUrl" id="currentMediaPreview"
+                                                         alt="Current media"
+                                                         class="img-fluid rounded shadow"
+                                                         style="max-height: 300px; max-width: 100%;"
+                                                         onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23f8f9fa%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%20fill%3D%22%23912356%22%3ECurrent%20Image%3C%2Ftext%3E%3C%2Fsvg%3E'" />
+                                                    <div class="mt-3">
+                                                        <small class="text-muted">Current image will be replaced if you upload a new file</small>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else if (Model.MediaType == "Video")
+                                            {
+                                                <div class="video-preview-container text-center p-3 border rounded-lg" style="background-color: #000; border-color: #912356 !important;">
+                                                    <video id="currentMediaPreview"
+                                                           class="img-fluid rounded"
+                                                           controls
+                                                           style="max-height: 300px; max-width: 100%;">
+                                                        <source src="@currentMediaUrl" type="video/mp4">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                    <div class="mt-3">
+                                                        <small class="text-muted" style="color: #fff;">Current video will be replaced if you upload a new file</small>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info d-flex align-items-center mb-4">
+                                        <i class="fas fa-info-circle mr-2" style="color: #912356;"></i>
+                                        <small>Leave the file field empty to keep the current media file</small>
+                                    </div>
+                                }
+
+                                <!-- New Media Upload -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Upload New Media (Optional)</label>
+                                    <div class="file-upload-area">
+                                        <div class="drag-drop-area p-5 text-center border-2 border-dashed rounded-lg"
+                                             id="dropArea"
+                                             style="border-color: #912356; background-color: rgba(145, 35, 86, 0.05);">
+                                            <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #912356;"></i>
+                                            <h6 class="mb-2">Drag & Drop new file here</h6>
+                                            <p class="text-muted small mb-3">or click to browse</p>
+                                            <input type="file" asp-for="MediaFile" class="d-none" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.mp4,.mov,.avi,.wmv,.webm" />
+                                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                                                <i class="fas fa-folder-open mr-2"></i> Browse Files
+                                            </button>
+                                            <div class="mt-3">
+                                                <small class="text-muted d-block">Max file size: 50MB</small>
+                                                <small class="text-muted">
+                                                    Images: JPG, PNG, GIF, BMP, WEBP
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    Videos: MP4, MOV, AVI, WMV, WEBM
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <!-- New File Preview -->
+                                        <div class="new-file-preview mt-4 d-none" id="newFilePreview">
+                                            <h6 class="text-primary mb-3"><i class="fas fa-eye mr-2"></i> New File Preview</h6>
+                                            <div class="preview-container" id="previewContainer"></div>
+                                            <div class="file-info mt-3">
+                                                <div class="alert alert-success d-flex align-items-center">
+                                                    <i class="fas fa-file-alt mr-3 fa-lg"></i>
+                                                    <div>
+                                                        <strong id="fileName"></strong>
+                                                        <div class="small text-muted" id="fileSize"></div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-link text-danger ms-auto" onclick="clearFile()">
+                                                        <i class="fas fa-times"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="MediaFile" class="text-danger small"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Media Type <span class="text-danger">*</span></label>
+                                        <select asp-for="MediaType" class="form-select" id="mediaTypeSelect">
+                                            <option value="">Select Type</option>
+                                            <option value="Image">Image</option>
+                                            <option value="Video">Video</option>
+                                        </select>
+                                        <span asp-validation-for="MediaType" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Display Order</label>
+                                        <input asp-for="DisplayOrder" class="form-control" type="number" min="0" max="100" />
+                                        <small class="text-muted">Lower numbers appear first</small>
+                                        <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content Card -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="mb-3 text-primary"><i class="fas fa-edit mr-2"></i> Content Details</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                                    <input asp-for="Title" class="form-control" placeholder="e.g., 10% Off Your First Order" />
+                                    <span asp-validation-for="Title" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Description</label>
+                                    <textarea asp-for="Description" class="form-control" rows="3"
+                                              placeholder="e.g., Welcome to Our Store - Shop now for amazing deals"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Button Text</label>
+                                        <input asp-for="ButtonText" class="form-control" placeholder="e.g., Shop Now" />
+                                        <span asp-validation-for="ButtonText" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Button Link</label>
+                                        <input asp-for="ButtonLink" class="form-control" placeholder="e.g., /products or https://..." />
+                                        <span asp-validation-for="ButtonLink" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings Card -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="mb-3 text-primary"><i class="fas fa-cog mr-2"></i> Settings</h6>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch"
+                                           style="background-color: #912356; border-color: #912356;" />
+                                    <label class="form-check-label fw-bold" asp-for="IsActive">
+                                        Active Status
+                                    </label>
+                                    <small class="d-block text-muted">Inactive items won't appear on the homepage</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times mr-2"></i> Cancel
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save mr-2"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .form-control:focus, .form-select:focus {
+            border-color: #912356;
+            box-shadow: 0 0 0 0.2rem rgba(145, 35, 86, 0.25);
+        }
+
+        .drag-drop-area:hover {
+            background-color: rgba(145, 35, 86, 0.1) !important;
+            border-color: #912356 !important;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #912356;
+            border-color: #912356;
+        }
+
+            .btn-primary:hover {
+                background-color: #7a1d48;
+                border-color: #7a1d48;
+            }
+
+        .btn-outline-primary {
+            color: #912356;
+            border-color: #912356;
+        }
+
+            .btn-outline-primary:hover {
+                background-color: #912356;
+                border-color: #912356;
+                color: white;
+            }
+
+        .card-header {
+            background-color: #912356 !important;
+        }
+
+        .text-primary {
+            color: #912356 !important;
+        }
+
+        .form-check-input:checked {
+            background-color: #912356;
+            border-color: #912356;
+        }
+
+        .file-info .alert {
+            border-left: 4px solid #28a745;
+        }
+
+        .preview-container {
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+
+            .preview-container img,
+            .preview-container video {
+                width: 100%;
+                max-height: 300px;
+                object-fit: contain;
+            }
+
+        .current-media-preview {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .video-preview-container {
+            border-color: #912356 !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Initialize form with current values
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current media type in dropdown
+            const mediaTypeSelect = document.getElementById('mediaTypeSelect');
+            const currentMediaType = '@Model.MediaType';
+            if (currentMediaType && mediaTypeSelect) {
+                mediaTypeSelect.value = currentMediaType;
+            }
+        });
+
+        // File upload handling
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const newFilePreview = document.getElementById('newFilePreview');
+        const previewContainer = document.getElementById('previewContainer');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const mediaTypeSelect = document.getElementById('mediaTypeSelect');
+        const currentMediaPreview = document.getElementById('currentMediaPreview');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.style.backgroundColor = 'rgba(145, 35, 86, 0.15)';
+            dropArea.style.borderColor = '#912356';
+        }
+
+        function unhighlight() {
+            dropArea.style.backgroundColor = 'rgba(145, 35, 86, 0.05)';
+            dropArea.style.borderColor = '#912356';
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelection(files[0]);
+            }
+        }
+
+        // Handle file input change
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                handleFileSelection(this.files[0]);
+            }
+        });
+
+        function handleFileSelection(file) {
+            updateFileInfo(file);
+            showPreview(file);
+            detectMediaType(file);
+            newFilePreview.classList.remove('d-none');
+
+            // Hide current media preview when new file is selected
+            if (currentMediaPreview) {
+                currentMediaPreview.style.opacity = '0.5';
+            }
+        }
+
+        function updateFileInfo(file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+        }
+
+        function showPreview(file) {
+            previewContainer.innerHTML = '';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-fluid rounded';
+                    img.style.maxHeight = '300px';
+                    img.style.width = '100%';
+                    img.style.objectFit = 'contain';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                video.className = 'img-fluid rounded';
+                video.style.maxHeight = '300px';
+                video.style.width = '100%';
+                video.style.objectFit = 'contain';
+                previewContainer.appendChild(video);
+            } else {
+                previewContainer.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-file fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">Preview not available for this file type</p>
+                    </div>
+                `;
+            }
+        }
+
+        function detectMediaType(file) {
+            const fileName = file.name.toLowerCase();
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+            const videoExtensions = ['.mp4', '.mov', '.avi', '.wmv', '.webm'];
+
+            const extension = '.' + fileName.split('.').pop();
+
+            if (imageExtensions.includes(extension)) {
+                mediaTypeSelect.value = 'Image';
+            } else if (videoExtensions.includes(extension)) {
+                mediaTypeSelect.value = 'Video';
+            }
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            newFilePreview.classList.add('d-none');
+            previewContainer.innerHTML = '';
+
+            // Restore current media preview opacity
+            if (currentMediaPreview) {
+                currentMediaPreview.style.opacity = '1';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form validation
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            const file = fileInput.files[0];
+            const mediaType = mediaTypeSelect.value;
+
+            if (file) {
+                // Validate file type based on selected media type
+                const fileName = file.name.toLowerCase();
+                const extension = '.' + fileName.split('.').pop();
+
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+                const videoExtensions = ['.mp4', '.mov', '.avi', '.wmv', '.webm'];
+
+                if (mediaType === 'Image' && !imageExtensions.includes(extension)) {
+                    e.preventDefault();
+                    alert('Please select a valid image file (JPG, PNG, GIF, BMP, WEBP).');
+                    return;
+                }
+
+                if (mediaType === 'Video' && !videoExtensions.includes(extension)) {
+                    e.preventDefault();
+                    alert('Please select a valid video file (MP4, MOV, AVI, WMV, WEBM).');
+                    return;
+                }
+
+                // Validate file size (50MB)
+                const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+                if (file.size > maxSize) {
+                    e.preventDefault();
+                    alert('File size exceeds 50MB limit. Please choose a smaller file.');
+                    return;
+                }
+            }
+        });
+    </script>
+}

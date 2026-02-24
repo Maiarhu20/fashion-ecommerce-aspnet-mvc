@@ -1,0 +1,506 @@
+﻿@model Core.DTOs.Orders.AdminOrderListResponse
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Order Management";
+    ViewData["ActivePage"] = "orders";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var filter = ViewBag.Filter as Core.DTOs.Orders.OrderFilterDto ?? new Core.DTOs.Orders.OrderFilterDto();
+}
+
+<div class="container-fluid px-2 px-md-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <h1 class="mt-4 mb-0">
+            <i class="fas fa-shopping-bag me-2" style="color: #912356;"></i>
+            Order Management
+        </h1>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="@Url.Action("Stats", "Orders", new { area = "Admin" })" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-chart-line me-1"></i> Statistics
+            </a>
+            <a href="@Url.Action("Export", "Orders", new { area = "Admin" })" class="btn btn-outline-success btn-sm" onclick="return confirm('Export orders to CSV?')">
+                <i class="fas fa-download me-1"></i> Export
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="display: block;" id="successAlert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="display: block;" id="errorAlert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Filter Card -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2" style="color: #912356;"></i>Filter Orders
+                </h5>
+                <button class="btn btn-sm btn-secondary d-md-none" type="button" id="filterToggleBtn">
+                    <i class="fas fa-chevron-down" id="filterToggleIcon"></i>
+                </button>
+            </div>
+        </div>
+        <div id="filterContent" class="d-md-block">
+            <div class="card-body pt-0">
+                <form method="get">
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="text" name="OrderNumber" class="form-control" id="orderNumber" placeholder="Order Number" value="@filter.OrderNumber">
+                                <label for="orderNumber"><i class="fas fa-hashtag me-1"></i>Order Number</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="text" name="CustomerEmail" class="form-control" id="customerEmail" placeholder="Email" value="@filter.CustomerEmail">
+                                <label for="customerEmail"><i class="fas fa-envelope me-1"></i>Customer Email</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="text" name="CustomerName" class="form-control" id="customerName" placeholder="Name" value="@filter.CustomerName">
+                                <label for="customerName"><i class="fas fa-user me-1"></i>Customer Name</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="form-floating">
+                                <select name="Status" class="form-select" id="status">
+                                    <option value="">All</option>
+                                    @if (ViewBag.Statuses != null)
+                                    {
+                                        @foreach (var status in ViewBag.Statuses as List<SelectListItem>)
+                                        {
+                                            <option value="@status.Value" selected="@(status.Value == filter.Status)">@status.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <label for="status">Status</label>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="form-floating">
+                                <select name="PaymentMethod" class="form-select" id="paymentMethod">
+                                    <option value="">All</option>
+                                    @if (ViewBag.PaymentMethods != null)
+                                    {
+                                        @foreach (var method in ViewBag.PaymentMethods as List<SelectListItem>)
+                                        {
+                                            <option value="@method.Value" selected="@(method.Value == filter.PaymentMethod)">@method.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <label for="paymentMethod">Payment</label>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="form-floating">
+                                <input type="date" name="StartDate" class="form-control" id="startDate" value="@(filter.StartDate?.ToString("yyyy-MM-dd"))">
+                                <label for="startDate">From Date</label>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="form-floating">
+                                <input type="date" name="EndDate" class="form-control" id="endDate" value="@(filter.EndDate?.ToString("yyyy-MM-dd"))">
+                                <label for="endDate">To Date</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-4 col-md-2">
+                            <div class="form-floating">
+                                <select name="PageSize" class="form-select" id="pageSize">
+                                    <option value="10" selected="@(filter.PageSize == 10)">10</option>
+                                    <option value="20" selected="@(filter.PageSize == 20)">20</option>
+                                    <option value="50" selected="@(filter.PageSize == 50)">50</option>
+                                </select>
+                                <label for="pageSize">Show</label>
+                            </div>
+                        </div>
+                        <div class="col-4 col-md-2">
+                            <div class="form-floating">
+                                <select name="SortBy" class="form-select" id="sortBy">
+                                    <option value="OrderDate" selected="@(filter.SortBy == "OrderDate")">Date</option>
+                                    <option value="TotalAmount" selected="@(filter.SortBy == "TotalAmount")">Amount</option>
+                                    <option value="GuestName" selected="@(filter.SortBy == "GuestName")">Name</option>
+                                </select>
+                                <label for="sortBy">Sort</label>
+                            </div>
+                        </div>
+                        <div class="col-4 col-md-2">
+                            <div class="form-floating">
+                                <select name="SortDescending" class="form-select" id="sortOrder">
+                                    <option value="true" selected="@(filter.SortDescending)">Desc</option>
+                                    <option value="false" selected="@(!filter.SortDescending)">Asc</option>
+                                </select>
+                                <label for="sortOrder">Order</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: #912356; border-color: #912356;">
+                                <i class="fas fa-search me-1"></i> Search
+                            </button>
+                            <a href="/admin/orders" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Orders
+                    <span class="badge bg-secondary ms-2">@Model.TotalCount</span>
+                </h5>
+                <small class="text-muted">Page @Model.Page of @Math.Max(1, Model.TotalPages)</small>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive d-none d-lg-block">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Order</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th class="text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Orders != null && Model.Orders.Any())
+                        {
+                            @foreach (var order in Model.Orders)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <strong class="text-primary">@order.OrderNumber</strong>
+                                    </td>
+                                    <td>
+                                        <div>@order.GuestName</div>
+                                        <small class="text-muted">@order.GuestEmail</small>
+                                    </td>
+                                    <td>
+                                        <div>@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                        <small class="text-muted">@order.OrderDate.ToString("hh:mm tt")</small>
+                                    </td>
+                                    <td>
+                                        <strong>EGP @order.TotalAmount.ToString("N2")</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(order.Status)">@order.Status</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@order.PaymentMethod</span>
+                                        <br><small class="text-muted">@order.PaymentStatus</small>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/admin/orders/details/@order.Id" class="btn btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (order.Status == "Pending" || order.Status == "Processing")
+                                            {
+                                                <button type="button" class="btn btn-outline-danger cancel-order-btn"
+                                                        data-order-id="@order.Id"
+                                                        data-order-number="@order.OrderNumber"
+                                                        title="Cancel">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                                    <p class="text-muted mb-0">No orders found</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="d-lg-none">
+                @if (Model.Orders != null && Model.Orders.Any())
+                {
+                    @foreach (var order in Model.Orders)
+                    {
+                        <div class="border-bottom p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong class="text-primary">@order.OrderNumber</strong>
+                                    <span class="badge @GetStatusBadgeClass(order.Status) ms-2">@order.Status</span>
+                                </div>
+                                <strong style="color: #912356;">EGP @order.TotalAmount.ToString("N2")</strong>
+                            </div>
+                            <div class="mb-2">
+                                <div class="fw-medium">@order.GuestName</div>
+                                <small class="text-muted">@order.GuestEmail</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>@order.OrderDate.ToString("MMM dd, yyyy")
+                                </small>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/admin/orders/details/@order.Id" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (order.Status == "Pending" || order.Status == "Processing")
+                                    {
+                                        <button type="button" class="btn btn-outline-danger btn-sm cancel-order-btn"
+                                                data-order-id="@order.Id"
+                                                data-order-number="@order.OrderNumber">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">No orders found</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 py-3">
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center mb-0 flex-wrap">
+                        <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                            <a class="page-link" href="?page=@(Model.Page - 1)&OrderNumber=@filter.OrderNumber&Status=@filter.Status&PageSize=@filter.PageSize">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        @for (int i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link" href="?page=@i&OrderNumber=@filter.OrderNumber&Status=@filter.Status&PageSize=@filter.PageSize"
+                                   style="@(i == Model.Page ? "background-color: #912356; border-color: #912356;" : "")">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="?page=@(Model.Page + 1)&OrderNumber=@filter.OrderNumber&Status=@filter.Status&PageSize=@filter.PageSize">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Cancel Order
+                </h5>
+            </div>
+            <form id="cancelOrderForm" action="/admin/orders/cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="cancelOrderId">
+                <div class="modal-body">
+                    <!-- Static Warning Alert - No dismiss button -->
+                    <div class="alert alert-warning mb-3" style="display: block;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The customer will be notified via email.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Order Number</label>
+                        <input type="text" class="form-control" id="cancelOrderNumber" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cancellation Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" id="cancelReason" class="form-control" rows="4"
+                                  placeholder="Please provide a detailed reason for cancellation..." required></textarea>
+                        <small class="text-muted">This reason will be shared with the customer.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="goBackBtn">
+                        <i class="fas fa-arrow-left me-1"></i> Go Back
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i> Confirm Cancellation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Mobile filter hidden by default */
+    @@media (max-width: 767.98px) {
+        #filterContent {
+            display: none;
+        }
+
+            #filterContent.show {
+                display: block;
+            }
+    }
+
+    .form-floating > label {
+        color: #6c757d;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label,
+    .form-floating > .form-select ~ label {
+        color: #912356;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #912356;
+        box-shadow: 0 0 0 0.2rem rgba(145, 35, 86, 0.15);
+    }
+
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter toggle for mobile
+        const filterToggleBtn = document.getElementById('filterToggleBtn');
+        const filterContent = document.getElementById('filterContent');
+        const filterToggleIcon = document.getElementById('filterToggleIcon');
+
+        if (filterToggleBtn && filterContent) {
+            filterToggleBtn.addEventListener('click', function() {
+                filterContent.classList.toggle('show');
+                if (filterContent.classList.contains('show')) {
+                    filterToggleIcon.classList.remove('fa-chevron-down');
+                    filterToggleIcon.classList.add('fa-chevron-up');
+                } else {
+                    filterToggleIcon.classList.remove('fa-chevron-up');
+                    filterToggleIcon.classList.add('fa-chevron-down');
+                }
+            });
+        }
+
+        // Cancel modal
+        const cancelModal = document.getElementById('cancelOrderModal');
+        let bsModal = null;
+
+        if (cancelModal) {
+            bsModal = new bootstrap.Modal(cancelModal);
+        }
+
+        // Handle cancel button clicks
+        document.querySelectorAll('.cancel-order-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const orderId = this.getAttribute('data-order-id');
+                const orderNumber = this.getAttribute('data-order-number');
+
+                document.getElementById('cancelOrderId').value = orderId;
+                document.getElementById('cancelOrderNumber').value = orderNumber;
+                document.getElementById('cancelReason').value = '';
+
+                if (bsModal) {
+                    bsModal.show();
+                }
+            });
+        });
+
+        // Go Back button
+        const goBackBtn = document.getElementById('goBackBtn');
+        if (goBackBtn && bsModal) {
+            goBackBtn.addEventListener('click', function() {
+                bsModal.hide();
+            });
+        }
+
+        // Handle form submission
+        const cancelForm = document.getElementById('cancelOrderForm');
+        if (cancelForm) {
+            cancelForm.addEventListener('submit', function(e) {
+                const reason = document.getElementById('cancelReason').value.trim();
+
+                if (!reason) {
+                    e.preventDefault();
+                    alert('Please provide a cancellation reason.');
+                    return false;
+                }
+
+                if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning text-dark",
+            "Processing" => "bg-info text-white",
+            "Shipped" => "bg-primary",
+            "Delivered" => "bg-success",
+            "Cancelled" => "bg-danger",
+            "Refunded" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+}

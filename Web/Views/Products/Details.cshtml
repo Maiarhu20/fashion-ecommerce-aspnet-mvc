@@ -1,0 +1,718 @@
+﻿@model Core.DTOs.Products.ProductResponseDto
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var primaryColor = "#912356";
+    var lightColor = "#f8eef2";
+    // Limit is 20, but if stock is lower than 20, use stock amount
+    var maxPurchaseLimit = Math.Min(20, Model.StockQuantity);
+}
+
+<!-- Anti-forgery token for AJAX -->
+@Html.AntiForgeryToken()
+
+<!-- Custom Toast Notification -->
+<div id="cart-toast" class="cart-toast">
+    <div class="toast-content">
+        <div class="toast-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="toast-text">
+            <span id="toast-message">Product added!</span>
+        </div>
+        <div class="toast-close" onclick="hideToast()">
+            <i class="fas fa-times"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Breadcrumb Start -->
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="breadcrumb-item text-dark" asp-action="AllProducts">Products</a>
+                <a class="breadcrumb-item text-dark" asp-action="ProductsByCategory" asp-route-id="@Model.CategoryId">@Model.CategoryName</a>
+                <span class="breadcrumb-item active">@Model.Name</span>
+            </nav>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+<!-- Product Details Start -->
+<div class="container-fluid pb-2">
+    <div class="row px-xl-5">
+        <!-- Product Images Section -->
+        <div class="col-lg-5 mb-5">
+            <div class="bg-light p-3 border rounded product-image-card shadow-sm">
+
+                <!-- Discount Badge - Yellow/Brown Theme, No Green -->
+                @if (Model.DiscountPercent > 0)
+                {
+                    <div class="discount-badge-overlay">
+                        <span class="badge py-2 px-3">
+                            SAVE @Model.DiscountPercent%
+                        </span>
+                    </div>
+                }
+
+                <!-- Image Gallery Carousel -->
+                <div id="product-carousel" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner rounded">
+                        @if (Model.Images != null && Model.Images.Any())
+                        {
+                            @for (int i = 0; i < Model.Images.Count; i++)
+                            {
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <div class="image-container">
+                                        <img class="img-fluid"
+                                             src="@Model.Images[i].ImageUrl"
+                                             alt="@Model.Name - Image @(i + 1)">
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="carousel-item active">
+                                <div class="image-container">
+                                    <img class="img-fluid" src="~/images/default-product.jpg" alt="Default Product">
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Navigation Arrows - Hidden on mobile via CSS below -->
+                    @if (Model.Images != null && Model.Images.Count > 1)
+                    {
+                        <a class="carousel-control-prev" href="#product-carousel" data-slide="prev">
+                            <div class="btn btn-primary btn-square">
+                                <i class="fa fa-angle-left text-white"></i>
+                            </div>
+                        </a>
+                        <a class="carousel-control-next" href="#product-carousel" data-slide="next">
+                            <div class="btn btn-primary btn-square">
+                                <i class="fa fa-angle-right text-white"></i>
+                            </div>
+                        </a>
+                    }
+                </div>
+
+                <!-- Thumbnails -->
+                @if (Model.Images != null && Model.Images.Count > 1)
+                {
+                    <div class="row mt-3 px-2">
+                        @for (int i = 0; i < Model.Images.Count; i++)
+                        {
+                            <div class="col-3 p-1">
+                                <a href="#" class="d-block thumbnail @(i == 0 ? "active" : "")" data-slide-to="@i">
+                                    <img class="img-fluid rounded border"
+                                         src="@Model.Images[i].ImageUrl"
+                                         alt="Thumb">
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Product Info Section -->
+        <div class="col-lg-7 mb-5">
+            <div class="h-100 bg-light p-4 border rounded product-info-card">
+                <h3 class="font-weight-semi-bold mb-3">@Model.Name</h3>
+
+                <!-- Price & Discount Info -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-center flex-wrap">
+                        <h2 class="font-weight-semi-bold mb-0 mr-3" style="color: @primaryColor;">
+                            EGP @Model.FinalPrice.ToString("F2")
+                        </h2>
+                        @if (Model.DiscountPercent > 0)
+                        {
+                            <h5 class="text-muted mb-0 mr-3"><del>EGP @Model.Price.ToString("F2")</del></h5>
+                        }
+                    </div>
+                    @if (Model.DiscountPercent > 0)
+                    {
+                        <div class="mt-2">
+                            <span class="badge py-1 px-2" style="background-color: #fff3cd; color: #856404; font-size: 0.9rem;">
+                                Save EGP @((Model.Price - Model.FinalPrice).ToString("F2"))
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.ReviewCount > 0)
+                {
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="text-warning mr-2">
+                            <small class="fa fa-star"></small><small class="fa fa-star"></small>
+                            <small class="fa fa-star"></small><small class="fa fa-star"></small>
+                            <small class="fa fa-star"></small>
+                        </div>
+                        <small class="text-muted">(@Model.ReviewCount reviews)</small>
+                    </div>
+                }
+
+                <div class="d-flex align-items-center mb-3">
+                    <strong class="text-dark mr-2">Category:</strong>
+                    <a asp-action="ProductsByCategory" asp-route-id="@Model.CategoryId" class="text-decoration-none" style="color: @primaryColor;">
+                        @Model.CategoryName
+                    </a>
+                </div>
+
+                <!-- Colors -->
+                @if (Model.Colors != null && Model.Colors.Any())
+                {
+                    <div class="mb-4">
+                        <strong class="text-dark mb-2 d-block">Available Colors:</strong>
+                        <div class="d-flex flex-wrap">
+                            @foreach (var color in Model.Colors)
+                            {
+                                <div class="mr-3 mb-2 text-center">
+                                    <div class="color-option-circle"
+                                         style="background-color: @color.ColorHexCode;"
+                                         data-color-name="@color.ColorName"
+                                         data-color-hex="@color.ColorHexCode"
+                                         onclick="selectColor(this)">
+                                    </div>
+                                    <small class="text-muted d-block mt-1">@color.ColorName</small>
+                                </div>
+                            }
+                        </div>
+                        <!-- Color Selection Bar -->
+                        <div class="selected-color-bar mt-2" id="selection-bar" style="display: none;">
+                            <span class="text-muted">Selected: <span id="selected-color-name"></span></span>
+                            <div id="selected-color-dot" class="selection-dot"></div>
+                        </div>
+                    </div>
+                }
+
+                <div class="mb-4">
+                    <h5 class="font-weight-semi-bold mb-2">Description</h5>
+                    <p class="text-muted">@(string.IsNullOrEmpty(Model.Description) ? "No description available." : Model.Description)</p>
+                </div>
+
+                <!-- Stock Status -->
+                <div class="mb-4">
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success mr-2"></i>
+                            <span class="text-success font-weight-bold">In Stock</span>
+                            <small class="text-muted ml-2">Available to order (Limit: 20 per customer)</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-times-circle text-danger mr-2"></i>
+                            <span class="text-danger font-weight-bold">Out of Stock</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Quantity (Limited to 20) and Add to Cart -->
+                <div class="d-flex align-items-center mb-4 flex-wrap">
+                    <div class="d-flex align-items-center mr-4 mb-2 mb-md-0">
+                        <strong class="text-dark mr-3">Quantity:</strong>
+                        <div class="input-group quantity-control">
+                            <div class="input-group-prepend">
+                                <button type="button" class="btn btn-minus" style="background-color: @lightColor; border: 1px solid #ddd;">
+                                    <i class="fa fa-minus" style="color: @primaryColor;"></i>
+                                </button>
+                            </div>
+                            <!-- Readonly to force use of buttons and maintain logic -->
+                            <input type="text" class="form-control text-center border bg-white"
+                                   value="1" id="quantity" readonly>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-plus" style="background-color: @lightColor; border: 1px solid #ddd;">
+                                    <i class="fa fa-plus" style="color: @primaryColor;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary px-4 py-2" id="add-to-cart-btn" @(Model.StockQuantity <= 0 ? "disabled" : "")>
+                        <i class="fa fa-shopping-cart mr-2"></i> Add To Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section Container -->
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12" id="reviews-container">
+            <div class="text-center py-4">
+                <i class="fa fa-spinner fa-spin fa-2x" style="color: @primaryColor;"></i>
+                <p>Loading reviews...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Policies Section -->
+<div class="container-fluid mt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="bg-light p-4 border rounded">
+                <h4 class="font-weight-semi-bold mb-4" style="color: @primaryColor;">Store Policies</h4>
+
+                <div class="row">
+                    <!-- Exchange Policy -->
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="policy-item">
+                            <div class="policy-header" style="cursor: pointer; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: white;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-exchange-alt mr-3" style="color: @primaryColor; font-size: 18px;"></i>
+                                        <span class="font-weight-bold" style="color: #333;">Exchange Policy</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down policy-arrow" style="color: @primaryColor; transition: transform 0.3s ease; font-size: 14px;"></i>
+                                </div>
+                            </div>
+                            <div class="policy-content" id="exchangePolicy" style="display: none;">
+                                <div class="mt-3 p-3" style="background-color: rgba(145, 35, 86, 0.05); border-radius: 6px; border-left: 3px solid @primaryColor;">
+                                    <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0;">
+                                        *****************
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Policy -->
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="policy-item">
+                            <div class="policy-header" style="cursor: pointer; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: white;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-truck mr-3" style="color: @primaryColor; font-size: 18px;"></i>
+                                        <span class="font-weight-bold" style="color: #333;">Delivery & Shipping</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down policy-arrow" style="color: @primaryColor; transition: transform 0.3s ease; font-size: 14px;"></i>
+                                </div>
+                            </div>
+                            <div class="policy-content" id="deliveryPolicy" style="display: none;">
+                                <div class="mt-3 p-3" style="background-color: rgba(145, 35, 86, 0.05); border-radius: 6px; border-left: 3px solid @primaryColor;">
+                                    <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0;">
+                                        ************************
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refund Policy -->
+                    <div class="col-lg-4 col-md-12 mb-3">
+                        <div class="policy-item">
+                            <div class="policy-header" style="cursor: pointer; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: white;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-undo mr-3" style="color: @primaryColor; font-size: 18px;"></i>
+                                        <span class="font-weight-bold" style="color: #333;">Refund & Cancellation</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down policy-arrow" style="color: @primaryColor; transition: transform 0.3s ease; font-size: 14px;"></i>
+                                </div>
+                            </div>
+                            <div class="policy-content" id="refundPolicy" style="display: none;">
+                                <div class="mt-3 p-3" style="background-color: rgba(145, 35, 86, 0.05); border-radius: 6px; border-left: 3px solid @primaryColor;">
+                                    <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0;">
+                                        *************************
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const MAX_ALLOWED = @maxPurchaseLimit;
+
+            // Load Reviews
+            $.get('/reviews/product/@Model.Id', function(data) {
+                $('#reviews-container').html(data);
+            });
+
+            // Quantity Logic (Limit to 20)
+            $('.btn-plus').on('click', function() {
+                let input = $('#quantity');
+                let currentVal = parseInt(input.val());
+                if (currentVal < MAX_ALLOWED) {
+                    input.val(currentVal + 1);
+                }
+            });
+
+            $('.btn-minus').on('click', function() {
+                let input = $('#quantity');
+                let currentVal = parseInt(input.val());
+                if (currentVal > 1) {
+                    input.val(currentVal - 1);
+                }
+            });
+
+            // Color Selection Logic
+            window.selectColor = function(el) {
+                $('.color-option-circle').removeClass('active-color');
+                $(el).addClass('active-color');
+
+                let name = $(el).data('color-name');
+                let hex = $(el).data('color-hex');
+
+                $('#selection-bar').fadeIn();
+                $('#selected-color-name').text(name);
+                $('#selected-color-dot').css('background-color', hex);
+            };
+
+            // Carousel Thumbnails
+            $('.thumbnail').click(function(e) {
+                e.preventDefault();
+                $('.thumbnail').removeClass('active');
+                $(this).addClass('active');
+                $('#product-carousel').carousel($(this).data('slide-to'));
+            });
+
+            $('#product-carousel').on('slid.bs.carousel', function (e) {
+                let idx = $(e.relatedTarget).index();
+                $('.thumbnail').removeClass('active');
+                $('.thumbnail[data-slide-to="' + idx + '"]').addClass('active');
+            });
+
+            // Policy Dropdown Logic
+            $('.policy-header').on('click', function() {
+                var $this = $(this);
+                var $policyItem = $this.closest('.policy-item');
+                var $content = $policyItem.find('.policy-content');
+                var $arrow = $this.find('.policy-arrow');
+
+                // Close other policies
+                $('.policy-content').not($content).slideUp(300);
+                $('.policy-arrow').not($arrow).css('transform', 'rotate(0deg)');
+
+                // Toggle current policy
+                $content.slideToggle(300, function() {
+                    if ($content.is(':visible')) {
+                        $arrow.css('transform', 'rotate(180deg)');
+                    } else {
+                        $arrow.css('transform', 'rotate(0deg)');
+                    }
+                });
+            });
+
+            // Add to Cart AJAX
+            $('#add-to-cart-btn').click(function() {
+                let btn = $(this);
+                let selectedColor = $('.color-option-circle.active-color').data('color-name');
+
+                if ($('.color-option-circle').length > 0 && !selectedColor) {
+                    showToast('Please select a color', 'error');
+                    return;
+                }
+
+                btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
+
+                $.ajax({
+                    url: '/cart/add-to-cart',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    data: { ProductId: @Model.Id, Quantity: $('#quantity').val(), SelectedColor: selectedColor },
+                    success: function(res) {
+                        if(res.success) {
+                            showToast('@Model.Name added!', 'success');
+                        } else {
+                            showToast(res.message, 'error');
+                        }
+                        if(typeof updateCartBadge === 'function') updateCartBadge();
+                    },
+                    error: function() {
+                        showToast('Something went wrong. Please try again.', 'error');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="fa fa-shopping-cart mr-2"></i> Add To Cart');
+                    }
+                });
+            });
+
+            // Toast Functions
+            window.showToast = function(message, type = 'success') {
+                const toast = $('#cart-toast');
+                const toastMessage = $('#toast-message');
+
+                // Set message and type
+                toastMessage.text(message);
+                toast.removeClass('success error').addClass(type);
+
+                // Show toast
+                toast.addClass('show');
+
+                // Auto hide after 3 seconds
+                setTimeout(function() {
+                    hideToast();
+                }, 3000);
+            };
+
+            window.hideToast = function() {
+                $('#cart-toast').removeClass('show');
+            };
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #912356;
+            --primary-dark: #7a1d47;
+            --bg-yellow: #fff3cd;
+            --text-brown: #856404;
+        }
+
+        /* Custom Toast Notification */
+        .cart-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #b8dabd;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+            transform: translateX(450px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+            .cart-toast.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            .cart-toast.success {
+                background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                border-color: #b8dabd;
+                color: #155724;
+            }
+
+            .cart-toast.error {
+                background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+                border-color: #f1aeb5;
+                color: #721c24;
+            }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+        }
+
+            .toast-icon i {
+                font-size: 20px;
+                color: #28a745;
+            }
+
+        .cart-toast.error .toast-icon i {
+            color: #dc3545;
+        }
+
+        .toast-text {
+            flex-grow: 1;
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            flex-shrink: 0;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            font-size: 14px;
+            padding: 2px;
+        }
+
+            .toast-close:hover {
+                opacity: 1;
+            }
+
+        /* Image Display: Full image, no stretch, no zoom */
+        .image-container {
+            height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+        }
+
+            .image-container img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain !important;
+            }
+
+        /* Discount Badge: Overlay Style */
+        .discount-badge-overlay {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            z-index: 10;
+        }
+
+            .discount-badge-overlay .badge {
+                background-color: var(--bg-yellow);
+                color: var(--text-brown);
+                font-size: 1rem;
+                border: none;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+        /* Quantity Fix: Wide enough for 2 digits */
+        .quantity-control {
+            width: 135px;
+        }
+
+            .quantity-control .form-control {
+                font-weight: bold;
+                padding: 0;
+            }
+
+        /* Color Circles */
+        .color-option-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            transition: 0.2s;
+            margin: 0 auto;
+        }
+
+        .active-color {
+            border-color: var(--primary-color) !important;
+            transform: scale(1.1);
+        }
+
+        /* Selected Color bar */
+        .selected-color-bar {
+            background-color: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #eee;
+        }
+
+        .selection-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+        }
+
+        /* Buttons & UI */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+            .btn-primary:hover {
+                background-color: var(--primary-dark) !important;
+            }
+
+        .btn-square {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumbnail img {
+            height: 75px;
+            width: 100%;
+            object-fit: contain;
+            background: white;
+            cursor: pointer;
+        }
+
+        .thumbnail.active img {
+            border: 2px solid var(--primary-color) !important;
+        }
+
+        /* Policy Styles */
+        .policy-header {
+            transition: all 0.3s ease;
+        }
+
+            .policy-header:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+        /* Mobile Specific Fixes */
+        @@media (max-width: 768px) {
+            .cart-toast
+
+        {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            min-width: auto;
+            max-width: none;
+            transform: translateY(-100px);
+        }
+
+        .cart-toast.show {
+            transform: translateY(0);
+        }
+
+        }
+
+        @@media (max-width: 767.98px) {
+            /* Hide Arrows on Mobile as requested */
+            .carousel-control-prev, .carousel-control-next
+
+        {
+            display: none !important;
+        }
+
+        .image-container {
+            height: 320px;
+        }
+        /* Ensure 2-digit quantity (11, 20) stays on one line */
+        .quantity-control {
+            width: 125px !important;
+        }
+
+        .product-info-card {
+            padding: 15px !important;
+        }
+
+        #add-to-cart-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Stack policies vertically on mobile */
+        .policy-item {
+            margin-bottom: 1rem;
+        }
+
+        }
+    </style>
+}

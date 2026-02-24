@@ -1,0 +1,590 @@
+﻿@model Core.DTOs.Cart.CartDto
+@{
+    ViewData["Title"] = "Your Cart";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var hasDiscountError = !string.IsNullOrEmpty(TempData["DiscountError"] as string);
+}
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4" >
+        <a asp-controller="Products" asp-action="AllProducts" class="btn btn-secondary me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="h3 mb-0">Shopping Cart</h1>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <!-- Empty Cart -->
+        <div class="text-center py-5" style="background-color:#fff; border-color:#912356 !important;">
+            <div class="mb-4">
+                <i class="fas fa-shopping-cart text-secondary" style="font-size: 4rem; color: #912356 !important; opacity: 0.3;"></i>
+            </div>
+            <h3 class="mb-3">Your cart is empty</h3>
+            <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
+            <a asp-controller="Products" asp-action="AllProducts" class="btn btn-lg btn-primary px-4" style="background-color: #912356;">
+                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <!-- Cart Items Column -->
+            <div class="col-12 col-lg-8">
+                <!-- Discount Code Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tag me-2" style="color: #912356;"></i>Discount Code
+                            </h5>
+                            @if (!string.IsNullOrEmpty(Model.DiscountCode) && Model.DiscountAmount > 0)
+                            {
+                                @* <span class="badge fs-6" style="background-color: #912356; color: white;">
+                                    <i class="fas fa-check-circle me-1"></i>@Model.DiscountCode Applied
+                                </span> *@
+                                <span class="badge bg-success" style="color:white">Applied: @Model.DiscountCode</span>
+                            }
+                        </div>
+
+                        <form asp-action="ApplyDiscount" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="input-group input-group-lg">
+                                <input type="text"
+                                       name="discountCode"
+                                       class="form-control"
+                                       placeholder="Enter discount code"
+                                       value="@(Model.DiscountAmount > 0 ? Model.DiscountCode : "")"
+                                       @(Model.DiscountAmount > 0 ? "readonly" : "") />
+                                @if (Model.DiscountAmount <= 0 || string.IsNullOrEmpty(Model.DiscountCode))
+                                {
+                                    <button type="submit" class="btn px-4" style="background-color: #912356; border-color: #912356; color: white;">
+                                        Apply
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-action="RemoveDiscount" class="btn btn-outline-danger px-4">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                }
+                            </div>
+
+                            <!-- Error Messages -->
+                            @if (hasDiscountError)
+                            {
+                                <div class="alert alert-danger mt-3 mb-0">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    @TempData["DiscountError"]
+                                </div>
+                                @* <div class="alert alert-danger alert-dismissible fade show mt-2 py-2 temp-alert" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    @TempData["DiscountError"]
+                                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div> *@
+                            }
+
+                            <!-- Success Messages -->
+                            @if (!hasDiscountError && !string.IsNullOrEmpty(TempData["Success"] as string))
+                            {
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    @TempData["Success"]
+                                </div>
+                                @* <div class="alert alert-success alert-dismissible fade show mt-2 py-2 temp-alert" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    @TempData["Success"]
+                                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div> *@
+                            }
+                            
+
+                            <!-- Applied Discount Info -->
+                            @if (!hasDiscountError && !string.IsNullOrEmpty(Model.DiscountCode) && Model.DiscountAmount > 0)
+                            {
+                                @* <div class="mt-3 p-3 rounded" style="background-color: rgba(145, 35, 86, 0.1); border-left: 4px solid #912356;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-check-circle me-2" style="color: #912356;"></i>
+                                            <span class="fw-medium">Discount Applied!</span>
+                                        </div>
+                                        <span class="h5 mb-0" style="color: #912356;">@Model.DiscountAmount.ToString("N2") EGP</span>
+                                    </div>
+                                </div> *@
+                                <div class="text-success small mt-1">
+                                    <i class="fas fa-check-circle"></i>
+                                    Discount applied! You saved @Model.DiscountAmount.ToString("N2")
+                                </div>
+
+                            }
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Cart Items Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-bag me-2" style="color: #912356;"></i>
+                                Cart Items (@Model.Items.Count)
+                            </h5>
+                            <form asp-action="ClearCart" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash me-1"></i> Clear
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Desktop Table -->
+                        <div class="table-responsive d-none d-lg-block">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th class="ps-4" style="width: 40%;">Product</th>
+                                        <th style="width: 15%;">Price</th>
+                                        <th style="width: 25%;">Quantity</th>
+                                        <th style="width: 15%;">Total</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 py-3">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div style="margin-right:10px">
+                                                    <img src="@item.ProductImageUrl"
+                                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
+                                                    </div>
+                                                    <div>
+                                                        <strong class="d-block mb-1">@item.ProductName</strong>
+                                                        <small class="text-muted">
+                                                            Color: @item.SelectedColor
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3">
+                                                @if (item.DiscountPercent > 0)
+                                                {
+                                                    <div>
+                                                        <span class="text-muted d-block small mb-1" style="text-decoration: line-through;">
+                                                            @item.OriginalPrice.ToString("N2") EGP
+                                                        </span>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="fw-bold" style="color: #912356;">
+                                                                @item.UnitPrice.ToString("N2") EGP
+                                                            </span>
+                                                            <span class="badge bg-danger" style="color: white; font-size: 0.7rem;">
+                                                                -@item.DiscountPercent%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="fw-bold">@item.UnitPrice.ToString("N2") EGP</span>
+                                                }
+                                            </td>
+                                            <td class="py-3">
+                                                <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center gap-2">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="CartItemId" value="@item.Id" />
+                                                    <input type="number"
+                                                           name="Quantity"
+                                                           min="1"
+                                                           max="@item.MaxStock"
+                                                           value="@item.Quantity"
+                                                           class="form-control form-control-sm text-center"
+                                                           style="width: 60px;" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            <td class="py-3">
+                                                <span class="fw-bold fs-5" style="color: #912356;">
+                                                    @item.LineTotal.ToString("N2") EGP
+                                                </span>
+                                                @if (item.DiscountPercent > 0)
+                                                {
+                                                    <div class="small text-success mt-1">
+                                                        <i class="fas fa-coins me-1"></i>
+                                                        Save @(((item.OriginalPrice - item.UnitPrice) * item.Quantity).ToString("N2")) EGP
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td class="py-3 text-end pe-4">
+                                                <form asp-action="RemoveItem" method="post" style="display: inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove item">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile Cards -->
+                        <div class="d-lg-none p-3">
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="card mb-3 border">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex gap-3 mb-3">
+                                            <div style="margin-right:20px">
+                                                <img src="@item.ProductImageUrl"
+                                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="flex-grow-1 pe-2">
+                                                        <strong class="d-block mb-2">@item.ProductName</strong>
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-palette me-1"></i>Color: @item.SelectedColor
+                                                        </div>
+                                                    </div>
+                                                    <form asp-action="RemoveItem" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="cartItemId" value="@item.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Price Section with Better Spacing -->
+                                        <div class="mb-3 pt-2 border-top">
+                                            <div class="small text-muted mb-1">Price:</div>
+                                            @if (item.DiscountPercent > 0)
+                                            {
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <span class="text-muted small" style="text-decoration: line-through;">
+                                                        @item.OriginalPrice.ToString("N2") EGP
+                                                    </span>
+                                                    <span class="fw-bold fs-6" style="color: #912356;">
+                                                        @item.UnitPrice.ToString("N2") EGP
+                                                    </span>
+                                                    <span class="badge bg-danger" style="color: white; font-size: 0.7rem;">
+                                                        -@item.DiscountPercent%
+                                                    </span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold fs-6" style="color: #912356;">
+                                                    @item.UnitPrice.ToString("N2") EGP
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <!-- Quantity and Total Section -->
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                            <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="CartItemId" value="@item.Id" />
+                                                <span class="small text-muted">Qty:</span>
+                                                <input type="number"
+                                                       name="Quantity"
+                                                       min="1"
+                                                       max="@item.MaxStock"
+                                                       value="@item.Quantity"
+                                                       class="form-control form-control-sm text-center"
+                                                       style="width: 50px;" />
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                            </form>
+                                            <div class="text-end">
+                                                <div class="small text-muted mb-1">Total:</div>
+                                                <span class="fw-bold fs-5" style="color: #912356;">
+                                                    @item.LineTotal.ToString("N2") EGP
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        @if (item.DiscountPercent > 0)
+                                        {
+                                            <div class="small text-success mt-2 pt-2 border-top">
+                                                <i class="fas fa-coins me-1"></i>
+                                                You save @(((item.OriginalPrice - item.UnitPrice) * item.Quantity).ToString("N2")) EGP
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary Column -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm sticky-top" style="top: 80px; z-index: 1;">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2" style="color: #912356;"></i>
+                            Order Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Items Count -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Items (@Model.TotalItems)</span>
+                            <span class="fw-medium">@Model.TotalItems</span>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Subtotal</span>
+                            <span>@Model.Subtotal.ToString("N2") EGP</span>
+                        </div>
+
+                        <!-- Discount -->
+                        @if (Model.HasCouponDiscount && Model.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>
+                                    <span class="badge me-1" style="background-color: #912356; color: white;">@Model.DiscountCode</span>
+                                </span>
+                                <span class="text-success">-@Model.DiscountAmount.ToString("N2") EGP</span>
+                            </div>
+                        }
+
+                        <hr />
+
+                        <!-- Total -->
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong class="fs-5">Total</strong>
+                            <strong class="fs-4" style="color: #912356;">
+                                @Model.TotalAmount.ToString("N2") EGP
+                            </strong>
+                        </div>
+
+                        <!-- Savings Summary -->
+                        @if (Model.TotalSavings > 0)
+                        {
+                            <div style="background-color: rgba(145, 35, 86, 0.1); border: 1px solid #912356; border-left: 4px solid #912356;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-tag me-2 fs-5" style="color: #912356;"></i>
+                                    <div>
+                                        <strong class="d-block">You saved @Model.TotalSavings.ToString("N2") EGP</strong>
+                                        @if (Model.HasProductDiscount && Model.HasCouponDiscount)
+                                        {
+                                            <small class="text-muted">
+                                                @Model.TotalProductDiscount.ToString("N2") EGP (products) +
+                                                @Model.DiscountAmount.ToString("N2") EGP (coupon)
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Checkout Button -->
+                        <div class="d-grid gap-2">
+                            <a href="/checkout" class="btn btn-lg py-3"
+                               style="background-color: #912356; border-color: #912356; color: white;">
+                                <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                            </a>
+                            <div class="text-center small text-muted mt-2">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Secure payment | Cash on delivery available
+                            </div>
+                        </div>
+
+                        <!-- Continue Shopping -->
+                        <div class="text-center mt-3">
+                            <a href="/products/all" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        /* Custom styles matching primary color #912356 */
+        /* .btn-primary {
+            background-color: #912356;
+            border-color: #912356;
+        }
+
+            .btn-primary:hover,
+            .btn-primary:focus {
+                background-color: #7a1d48;
+                border-color: #7a1d48;
+            }
+
+        .btn-outline-primary {
+            color: #912356;
+            border-color: #912356;
+        }
+
+            .btn-outline-primary:hover,
+            .btn-outline-primary:focus {
+                background-color: #912356;
+                border-color: #912356;
+                color: white;
+            } */
+
+        .empty-cart {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            color: var(--gray-300);
+            margin-bottom: 1rem;
+        }
+
+        .text-primary {
+            color: #912356 !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #912356;
+            box-shadow: 0 0 0 0.2rem rgba(145, 35, 86, 0.25);
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        /* Badge styling */
+        .badge {
+            font-weight: 500;
+        }
+
+        /* Table styling */
+        .table th {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        /* Input group styling */
+        .input-group-lg .form-control,
+        .input-group-lg .btn {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+
+        /* Alert styling */
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        /* Smooth transitions */
+        .btn,
+        .form-control,
+        .form-select,
+        .card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Remove item button hover */
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        /* Mobile optimizations */
+        @@media (max-width: 991.98px) {
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            .btn-lg {
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+            }
+            /* Add bottom margin to cart items section in mobile */
+            .col-12.col-lg-8 {
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-header h5 {
+                font-size: 1rem;
+            }
+
+            .btn-lg {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Clear error messages when user starts typing in discount code field
+            $('input[name="discountCode"]').on('input', function() {
+                $('.alert').not('.alert-savings').alert('close');
+            });
+
+            // Auto-close temporary alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').not('.alert-savings').alert('close');
+            }, 5000);
+
+            // Quantity input validation
+            $('input[name="Quantity"]').on('change', function() {
+                var min = parseInt($(this).attr('min'));
+                var max = parseInt($(this).attr('max'));
+                var value = parseInt($(this).val());
+
+                if (value < min) {
+                    $(this).val(min);
+                } else if (value > max) {
+                    $(this).val(max);
+                }
+            });
+        });
+    </script>
+}

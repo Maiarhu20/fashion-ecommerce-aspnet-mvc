@@ -1,0 +1,423 @@
+﻿@model Core.DTOs.Reviews.ProductReviewsDto
+@{
+    var primaryColor = "#912356";
+    var lightColor = "#f8eef2";
+}
+
+<div class="container-fluid py-2" id="reviews-section">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-4" style="color: @primaryColor;">Customer Reviews</h4>
+
+            <!-- Review Stats -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" style="color: @primaryColor;">@Model.AverageRating.ToString("F1")</h2>
+                            <div class="rating-stars mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fa @(i <= Math.Floor(Model.AverageRating) ? "fa-star" : "fa-star-o")"
+                                       style="color: @(i <= Math.Floor(Model.AverageRating) ? "#ffc107" : "#ddd");"></i>
+                                }
+                            </div>
+                            <p class="text-muted mb-0">@Model.TotalReviews reviews</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <!-- Rating distribution -->
+                    @if (Model.TotalReviews > 0)
+                    {
+                        <div class="rating-distribution">
+                            @for (int rating = 5; rating >= 1; rating--)
+                            {
+                                var ratingCount = Model.Reviews.Count(r => r.Rating == rating);
+                                var percentage = Model.TotalReviews > 0 ? (ratingCount * 100 / Model.TotalReviews) : 0;
+
+                                <div class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2" style="width: 30px;">@rating ★</span>
+                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                            <div class="progress-bar" role="progressbar"
+                                                 style="width: @percentage%; background-color: @primaryColor;"
+                                                 aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <span class="ml-2 text-muted" style="width: 40px;">@ratingCount</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header" style="background-color: @lightColor; border-bottom: 2px solid @primaryColor;">
+                    <h5 class="mb-0" style="color: @primaryColor;">Write a Review</h5>
+                </div>
+                <div class="card-body">
+                    <form id="review-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="product-id" value="@Model.ProductId" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="guest-name">Your Name *</label>
+                                    <input type="text" class="form-control" id="guest-name" name="GuestName" required
+                                           placeholder="Enter your name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="guest-email">Your Email *</label>
+                                    <input type="email" class="form-control" id="guest-email" name="GuestEmail" required
+                                           placeholder="Enter your email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FIXED RATING SECTION -->
+                        <div class="form-group">
+                            <label class="d-block mb-2">Rating *</label>
+                            <div class="rating-input-wrapper">
+                                <!-- Stars in correct order (1 to 5) -->
+                                <div class="rating-stars-selector mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <input type="radio" id="star-@i" name="Rating" value="@i" class="d-none" />
+                                        <label for="star-@i" class="star-label-select" data-value="@i" title="@i star">
+                                            <i class="fa fa-star fa-2x"></i>
+                                        </label>
+                                    }
+                                </div>
+                                <div class="rating-feedback">
+                                    <small class="text-muted" id="rating-text">Click stars to rate (1-5 stars)</small>
+                                    <div class="selected-rating mt-1" style="display: none;">
+                                        <span class="badge badge-warning">
+                                            <span id="selected-rating-value">0</span> <i class="fa fa-star"></i>
+                                        </span>
+                                        <small class="ml-2" id="rating-description"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="review-title">Review Title</label>
+                            <input type="text" class="form-control" id="review-title" name="Title" maxlength="200"
+                                   placeholder="Summarize your experience">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="review-comment">Your Review *</label>
+                            <textarea class="form-control" id="review-comment" name="Comment" rows="4"
+                                      required maxlength="1000" placeholder="Share your thoughts about this product..."></textarea>
+                            <small class="text-muted float-right">
+                                <span id="char-count">0</span> / 1000 characters
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-primary px-4"
+                                    style="background-color: @primaryColor; border-color: @primaryColor;"
+                                    id="submit-review-btn">
+                                <i class="fa fa-paper-plane mr-2"></i> Submit Review
+                            </button>
+                            <small class="text-muted ml-3">* Required fields</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="reviews-list">
+                @if (Model.Reviews.Any())
+                {
+                    <h5 class="mb-4" style="color: @primaryColor;">Customer Reviews (@Model.TotalReviews)</h5>
+
+                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedDate))
+                    {
+                        <div class="review-item card mb-3 border-left-4" style="border-left-color: @primaryColor;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title font-weight-bold mb-2">
+                                            @(string.IsNullOrEmpty(review.Title) ? "Review" : review.Title)
+                                        </h6>
+                                        <div class="rating-display mb-2">
+                                            <div class="stars mb-1">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="fa @(i <= review.Rating ? "fa-star text-warning" : "fa-star-o text-muted")"></i>
+                                                }
+                                                <span class="ml-2 font-weight-bold text-dark">@review.Rating/5</span>
+                                            </div>
+                                            <small class="text-muted">
+                                                @switch (review.Rating)
+                                                {
+                                                    case 1:
+                                                        <text>Terrible</text>
+                                                        break;
+                                                    case 2:
+                                                        <text>Poor</text>
+                                                        break;
+                                                    case 3:
+                                                        <text>Average</text>
+                                                        break;
+                                                    case 4:
+                                                        <text>Good</text>
+                                                        break;
+                                                    case 5:
+                                                        <text>Excellent</text>
+                                                        break;
+                                                }
+                                            </small>
+                                        </div>
+                                        <p class="card-text mt-3">@review.Comment</p>
+                                    </div>
+                                    <div class="col-md-4 text-md-right">
+                                        <p class="mb-1"><strong>@review.GuestName</strong></p>
+                                        <small class="text-muted d-block">
+                                            <i class="fa fa-calendar-alt mr-1"></i>@review.CreatedDate.ToString("MMMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-info text-center">
+                        <i class="fa fa-comments fa-2x mb-3" style="color: @primaryColor;"></i>
+                        <h5 class="mb-2">No reviews yet</h5>
+                        <p class="mb-0">Be the first to review this product!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- At the bottom of the file, after the HTML -->
+<script src="~/js/reviews.js"></script>
+
+<style>
+    /* FIXED: Rating stars selector - JavaScript handles all interactivity */
+    .rating-stars-selector {
+        direction: ltr;
+        display: flex;
+        gap: 5px;
+    }
+
+    .star-label-select {
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.3s;
+        padding: 0 5px;
+        display: inline-block;
+        position: relative;
+    }
+
+        .star-label-select i {
+            transition: all 0.3s;
+            color: #ddd;
+        }
+
+    .rating-input-wrapper {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .rating-feedback {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #dee2e6;
+    }
+
+    .selected-rating {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* Reviews list spacing */
+    .reviews-list {
+        margin-top: 20px;
+    }
+
+    .review-item {
+        margin-bottom: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .rating-display .stars i {
+        font-size: 1.2rem;
+        margin-right: 2px;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .rating-stars-selector
+
+    {
+        text-align: center;
+        justify-content: center;
+    }
+
+    .star-label-select {
+        padding: 0 3px;
+    }
+
+        .star-label-select i {
+            font-size: 1.5rem !important;
+        }
+
+    .review-item .col-md-4 {
+        margin-top: 15px;
+        text-align: left !important;
+    }
+
+    }
+
+    /* Review success modal */
+    #review-success-modal .modal-header {
+        background-color: #28a745 !important;
+        border-bottom: none;
+    }
+
+    #review-success-modal .modal-content {
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    #review-success-modal .alert-info {
+        background-color: #e7f3ff;
+        border-color: #b8daff;
+    }
+
+    #review-success-modal .close {
+        opacity: 0.8;
+    }
+
+        #review-success-modal .close:hover {
+            opacity: 1;
+        }
+
+    /* Ensure button reset works */
+    #submit-review-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .badge-warning {
+        background-color: #ffc107 !important;
+        color: #333 !important;
+    }
+
+    /* Average rating stars styling */
+    .rating-stars i {
+        font-size: 1.5rem;
+        margin: 0 3px;
+    }
+
+    /* Distribution rating styling */
+    .rating-distribution {
+        padding: 10px;
+    }
+
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+
+    .ml-2 {
+        margin-left: 0.5rem;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    .border-left-4 {
+        border-left: 4px solid !important;
+    }
+
+    /* Toast styling */
+    .toast-alert {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 4px;
+        animation: slideIn 0.3s ease;
+    }
+
+    @@keyframes slideIn {
+        from
+
+    {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    }
+
+    .toast-alert.alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+
+    .toast-alert.alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+        color: #856404;
+    }
+
+    .toast-alert.alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    /* Form validation styles */
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control.is-valid {
+        border-color: #28a745;
+    }
+
+    /* Character counter styling */
+    #char-count {
+        font-weight: 500;
+        color: #912356;
+    }
+</style>

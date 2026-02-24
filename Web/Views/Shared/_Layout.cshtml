@@ -1,0 +1,666 @@
+﻿@using Core.DTOs.Categories
+@inject Core.Services.CategoryService CategoryService
+
+@{
+    var categoriesResult = await CategoryService.GetAllAsync();
+    var categories = categoriesResult.Succeeded ? categoriesResult.Data : new List<CategoryListDto>();
+
+    // Keep TempData messages for ONE extra hop (redirects)
+    if (TempData["Success"] != null) TempData.Keep("Success");
+    if (TempData["Error"] != null) TempData.Keep("Error");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - LabellaScarves</title>
+
+    <link rel="icon" href="~/img/favicon.ico" />
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Owl Carousel -->
+    <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet" />
+
+    <!-- Template stylesheet -->
+    <link href="~/css/style.css" rel="stylesheet" />
+
+    @Html.AntiForgeryToken()
+    @RenderSection("Styles", required: false)
+
+    <style>
+        /* Search Dropdown Styles */
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1050;
+            display: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+            .search-results-dropdown.show {
+                display: block;
+            }
+
+        .search-section-title {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #912356;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .search-result-item:hover {
+                background: #f9e8e9;
+                text-decoration: none;
+                color: #912356;
+            }
+
+            .search-result-item img {
+                width: 50px;
+                height: 50px;
+                object-fit: cover;
+                border-radius: 6px;
+                margin-right: 12px;
+            }
+
+            .search-result-item .result-info {
+                flex: 1;
+            }
+
+            .search-result-item .result-name {
+                font-weight: 500;
+                margin-bottom: 2px;
+            }
+
+            .search-result-item .result-category {
+                font-size: 12px;
+                color: #888;
+            }
+
+            .search-result-item .result-price {
+                font-weight: 600;
+                color: #912356;
+            }
+
+            .search-result-item.category-item i {
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #f9e8e9;
+                border-radius: 6px;
+                margin-right: 12px;
+                color: #912356;
+                font-size: 20px;
+            }
+
+        .search-no-results {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        .search-view-all {
+            display: block;
+            padding: 12px 15px;
+            text-align: center;
+            background: #912356;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 0 0 8px 8px;
+        }
+
+            .search-view-all:hover {
+                background: #7a1d47;
+                color: #fff;
+                text-decoration: none;
+            }
+
+        .topbar-search {
+            position: relative;
+        }
+
+        .search-loading {
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========  TOP-BAR  ========= -->
+    <div class="container-fluid">
+
+        <!-- Social Media Bar -->
+        <div class="row py-2 px-xl-5" style="background-color: #912356;">
+            <div class="col-12 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center w-100">
+                    <a class="text-light px-3" href="" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a class="text-light px-3" href="" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a class="text-light px-3" href="" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search + Logo + Cart -->
+        <div class="row align-items-center py-3 px-xl-5">
+            <!-- SEARCH – DESKTOP ONLY -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <form class="topbar-search" id="desktopSearchForm" autocomplete="off">
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control search-input"
+                               id="desktopSearchInput"
+                               placeholder="Search for products"
+                               autocomplete="off" />
+                        <div class="input-group-append">
+                            <span class="input-group-text" style="cursor: pointer;" id="desktopSearchBtn">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="search-results-dropdown" id="desktopSearchResults"></div>
+                </form>
+            </div>
+
+            <!-- LOGO - Left aligned on mobile, centered on desktop -->
+            <div class="col-lg-6 col-4 text-lg-center text-left">
+                <a class="text-decoration-none" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="" alt="" style="height: 120px; width: auto;" />
+                </a>
+            </div>
+
+            <!-- CART + MOBILE MENU TOGGLE - Far right on mobile -->
+            <div class="col-lg-3 col-8 d-flex justify-content-end align-items-center">
+                <!-- Cart Dropdown -->
+                <div class="dropdown mr-2">
+                    <a class="btn border topbar-cart mr-2 dropdown-toggle"
+                       href="#"
+                       id="cartDropdown"
+                       data-toggle="dropdown"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="badge cart-badge" id="cartBadge">0</span>
+                    </a>
+
+                    <!-- Mini Cart Container -->
+                    <div class="dropdown-menu dropdown-menu-right p-0" style="min-width:340px;" aria-labelledby="cartDropdown">
+                        <div id="mini-cart-container">
+                            <!-- Mini cart will be loaded via AJAX -->
+                            <div class="text-center py-3">
+                                <span class="spinner-border text-primary"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile menu toggle -->
+                <button class="btn btn-outline-pink d-lg-none mobile-menu-toggle"
+                        type="button"
+                        data-toggle="collapse"
+                        data-target="#navbarCollapse"
+                        aria-controls="navbarCollapse"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="mobile-menu-icon"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========  NAVBAR / SIDEBAR / MAIN  ========= -->
+    <div class="container-fluid mb-5">
+        <div class="row border-top px-xl-5">
+            <!-- LEFT SIDEBAR (desktop only) -->
+            <div class="col-lg-3 d-none d-lg-block">
+
+                <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                     style="height: 65px; margin-top: -1px; padding: 0 30px; border: 2px solid white;">
+                    <a asp-controller="Home" asp-action="Index" class="text-white">
+                        <i class="fas fa-home mr-2"></i> Home
+                    </a>
+                </div>
+                <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                     style="height: 65px; margin-top: -1px; padding: 0 30px; border: 2px solid white;">
+                    <a asp-controller="Products" asp-action="AllProducts" class="text-white">All Products</a>
+                </div>
+
+                <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                     data-toggle="collapse" href="#navbar-vertical"
+                     style="height: 65px; margin-top: -1px; padding: 0 30px; border: 2px solid white;">
+                    <h6 class="m-0" style="color:white;">Categories</h6>
+                    <i class="fa fa-angle-down text-dark"></i>
+                </div>
+
+                <nav class="collapse show navbar navbar-vertical navbar-light align-items-start p-0 border border-top-0 border-bottom-0"
+                     id="navbar-vertical">
+                    <div class="navbar-nav w-100" style="max-height: 300px; overflow-y: auto;">
+                        @foreach (var category in categories)
+                        {
+                            <a asp-controller="Products"
+                               asp-action="ProductsByCategory"
+                               asp-route-id="@category.Id"
+                               class="nav-item nav-link"
+                               data-category-id="@category.Id">
+                                @category.Name
+                            </a>
+                        }
+                        @if (!categories.Any())
+                        {
+                            <div class="nav-item nav-link text-muted">No categories available</div>
+                        }
+                    </div>
+                </nav>
+
+                <!-- About Us - Desktop -->
+                <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                     style="height: 65px; margin-top: -1px; padding: 0 30px; border: 2px solid white;">
+                    <a asp-controller="Home" asp-action="About" class="text-white">
+                        <i class="fas fa-info-circle mr-2"></i> About Us
+                    </a>
+                </div>
+
+                <!-- Contact - Desktop -->
+                <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                     style="height: 65px; margin-top: -1px; padding: 0 30px; border: 2px solid white;">
+                    <a href="https://wa.me/" target="_blank" class="text-white">
+                        <i class="fab fa-whatsapp mr-2"></i> Contact
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE: MOBILE NAV + MAIN CONTENT -->
+            <div class="col-lg-9">
+                <!-- Mobile Navigation (Same structure as admin layout) -->
+                <nav class="navbar navbar-expand-lg bg-light navbar-light py-0 px-0 d-lg-none">
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <!-- Search Bar for Mobile (Inside collapse like admin layout) -->
+                        <form class="topbar-search px-3 pt-2 pb-3" id="mobileSearchForm" autocomplete="off">
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control search-input"
+                                       id="mobileSearchInput"
+                                       placeholder="Search for products"
+                                       autocomplete="off" />
+                                <div class="input-group-append">
+                                    <span class="input-group-text" style="cursor: pointer;" id="mobileSearchBtn">
+                                        <i class="fa fa-search"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="search-results-dropdown" id="mobileSearchResults"></div>
+                        </form>
+
+                        <!-- Mobile Navigation Items -->
+                        <div class="navbar-nav w-100">
+                            <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                                 style="border: 2px solid white;">
+                                <a asp-controller="Home" asp-action="Index" class="text-white text-decoration-none">
+                                    <i class="fas fa-home mr-2"></i> Home
+                                </a>
+                            </div>
+                            <!-- All Products -->
+                            <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                                 style="border: 2px solid white;">
+                                <a asp-controller="Products" asp-action="AllProducts" class="text-white text-decoration-none">
+                                    <i class="fas fa-boxes mr-2"></i> All Products
+                                </a>
+                            </div>
+
+                            <!-- Categories Toggle (Fixed - doesn't hide other items) -->
+                            <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                                 style="border: 2px solid white;"
+                                 data-toggle="collapse"
+                                 data-target="#mobileCategories">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-list mr-2"></i> Categories
+                                </div>
+                                <i class="fa fa-angle-down text-dark"></i>
+                            </div>
+
+                            <!-- Categories List (Separate collapse target) -->
+                            <div class="collapse w-100" id="mobileCategories">
+                                <div class="nav flex-column pl-4">
+                                    @foreach (var category in categories)
+                                    {
+                                        <a asp-controller="Products"
+                                           asp-action="ProductsByCategory"
+                                           asp-route-id="@category.Id"
+                                           class="nav-link text-dark py-2"
+                                           data-category-id="@category.Id">
+                                            @category.Name
+                                        </a>
+                                    }
+                                    @if (!categories.Any())
+                                    {
+                                        <div class="nav-link text-muted py-2">No categories available</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Other Mobile Menu Items -->
+                            <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                                 style="border: 2px solid white;">
+                                <a asp-controller="Home" asp-action="About" class="text-white text-decoration-none">
+                                    <i class="fas fa-info-circle mr-2"></i> About Us
+                                </a>
+                            </div>
+
+                            <div class="btn shadow-none d-flex align-items-center justify-content-between bg-products text-white w-100"
+                                 style="border: 2px solid white;">
+                                <a href="https://wa.me/" target="_blank" class="text-white text-decoration-none">
+                                    <i class="fab fa-whatsapp mr-2"></i> Contact
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Main Content -->
+                @RenderSection("Hero", required: false)
+                <main class="pt-3">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include footer -->
+    <partial name="_Footer" />
+
+    <!-- =========  SCRIPTS  ========= -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/easing/easing.js"></script>
+    <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="~/js/main.js"></script>
+
+    <!-- CART BADGE + MINI-CART REFRESH + SEARCH -->
+    <script>
+        // call this whenever you want to refresh the badge
+        function updateCartBadge() {
+            $.get('@Url.Action("CartCountNumber", "Cart")')
+                .done(count => $('#cartBadge').text(count || '0'))
+                .fail(() => console.error('Failed to load cart count'));
+        }
+
+        // call this to load the partial into the dropdown
+        function loadMiniCart() {
+            // put a spinner in while we wait
+            $('#mini-cart-container').html(
+                '<div class="text-center py-3">' +
+                '<span class="spinner-border text-primary"></span>' +
+                '</div>'
+            );
+
+            $.ajax({
+                url: '@Url.Action("MiniCartPartial", "Cart")',
+                type: 'GET',
+                success(data) {
+                    $('#mini-cart-container').html(data);
+                },
+                error(xhr, status, err) {
+                    $('#mini-cart-container').html(
+                        '<div class="p-3 text-danger">Error loading mini-cart</div>'
+                    );
+                    console.error('MiniCartPartial error', status, err);
+                }
+            });
+        }
+
+        // ========== SEARCH FUNCTIONALITY ==========
+        let searchTimeout;
+        const searchDelay = 300; // milliseconds
+
+        function performSearch(query, resultsContainer) {
+            if (!query || query.trim().length < 2) {
+                resultsContainer.removeClass('show').empty();
+                return;
+            }
+
+            // Show loading
+            resultsContainer.html('<div class="search-loading"><span class="spinner-border spinner-border-sm text-primary"></span> Searching...</div>').addClass('show');
+
+            $.ajax({
+                url: '@Url.Action("Search", "Products")',
+                type: 'GET',
+                data: { query: query.trim() },
+                success: function(data) {
+                    renderSearchResults(data, resultsContainer, query);
+                },
+                error: function() {
+                    resultsContainer.html('<div class="search-no-results">Error performing search. Please try again.</div>');
+                }
+            });
+        }
+
+        function renderSearchResults(data, container, query) {
+            let html = '';
+
+            // Categories section
+            if (data.categories && data.categories.length > 0) {
+                html += '<div class="search-section-title"><i class="fas fa-folder mr-2"></i>Categories</div>';
+                data.categories.forEach(function(cat) {
+                    html += `
+                        <a href="@Url.Action("category", "Products")/${cat.id}" class="search-result-item category-item">
+                            <i class="fas fa-tag"></i>
+                            <div class="result-info">
+                                <div class="result-name">${escapeHtml(cat.name)}</div>
+                                <div class="result-category">${cat.productCount} product(s)</div>
+                            </div>
+                        </a>
+                    `;
+                });
+            }
+
+            // Products section
+            if (data.products && data.products.length > 0) {
+                html += '<div class="search-section-title"><i class="fas fa-box mr-2"></i>Products</div>';
+                data.products.forEach(function(product) {
+                    const imageUrl = product.primaryImageUrl || '/images/default-product.jpg';
+                    const price = product.discountPercent > 0
+                        ? `<span class="result-price">EGP ${product.finalPrice.toFixed(2)}</span> <small class="text-muted"><del>EGP ${product.price.toFixed(2)}</del></small>`
+                        : `<span class="result-price">EGP ${product.price.toFixed(2)}</span>`;
+
+                    html += `
+                        <a href="@Url.Action("Details", "Products")/${product.id}" class="search-result-item">
+                            <img src="${imageUrl}" alt="${escapeHtml(product.name)}" onerror="this.src='/images/default-product.jpg'">
+                            <div class="result-info">
+                                <div class="result-name">${escapeHtml(product.name)}</div>
+                                <div class="result-category">${escapeHtml(product.categoryName)}</div>
+                            </div>
+                            <div>${price}</div>
+                        </a>
+                    `;
+                });
+            }
+
+            // No results
+            if ((!data.categories || data.categories.length === 0) && (!data.products || data.products.length === 0)) {
+                html = '<div class="search-no-results"><i class="fas fa-search mb-2" style="font-size: 24px; color: #ddd;"></i><br>No results found for "' + escapeHtml(query) + '"</div>';
+            } else {
+                // View all link
+                html += `<a href="@Url.Action("AllProducts", "Products")?search=${encodeURIComponent(query)}" class="search-view-all">View all results <i class="fas fa-arrow-right ml-2"></i></a>`;
+            }
+
+            container.html(html).addClass('show');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        $(function () {
+            // initial badge
+            updateCartBadge();
+
+            // when the user *opens* the cart dropdown, fetch the partial
+            $('#cartDropdown')
+                .closest('.dropdown')
+                .on('shown.bs.dropdown', loadMiniCart);
+
+            // optionally refresh badge every 30s
+            setInterval(updateCartBadge, 30000);
+
+            // Mobile menu toggle animation
+            $('.mobile-menu-toggle').on('click', function () {
+                $(this).toggleClass('active');
+            });
+
+            // Prevent categories collapse from hiding the navbar
+            $('#mobileCategories').on('show.bs.collapse', function () {
+                // Do nothing - let it show
+            }).on('hide.bs.collapse', function () {
+                // Do nothing - let it hide
+            });
+
+            // Close mobile menu when clicking on category links (optional)
+            $('#mobileCategories .nav-link').on('click', function() {
+                $('#navbarCollapse').collapse('hide');
+            });
+
+            // Close all collapses when mobile menu is hidden
+            $('#navbarCollapse').on('hidden.bs.collapse', function () {
+                $('#mobileCategories').collapse('hide');
+                $('.mobile-menu-toggle').removeClass('active');
+            });
+
+            // ========== SEARCH EVENT HANDLERS ==========
+
+            // Desktop search
+            $('#desktopSearchInput').on('input', function() {
+                const query = $(this).val();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    performSearch(query, $('#desktopSearchResults'));
+                }, searchDelay);
+            });
+
+            $('#desktopSearchInput').on('focus', function() {
+                const query = $(this).val();
+                if (query && query.trim().length >= 2) {
+                    performSearch(query, $('#desktopSearchResults'));
+                }
+            });
+
+            $('#desktopSearchBtn').on('click', function() {
+                const query = $('#desktopSearchInput').val();
+                if (query && query.trim().length >= 2) {
+                    window.location.href = '@Url.Action("AllProducts", "Products")?search=' + encodeURIComponent(query);
+                }
+            });
+
+            $('#desktopSearchForm').on('submit', function(e) {
+                e.preventDefault();
+                const query = $('#desktopSearchInput').val();
+                if (query && query.trim().length >= 2) {
+                    window.location.href = '@Url.Action("AllProducts", "Products")?search=' + encodeURIComponent(query);
+                }
+            });
+
+            // Mobile search
+            $('#mobileSearchInput').on('input', function() {
+                const query = $(this).val();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    performSearch(query, $('#mobileSearchResults'));
+                }, searchDelay);
+            });
+
+            $('#mobileSearchInput').on('focus', function() {
+                const query = $(this).val();
+                if (query && query.trim().length >= 2) {
+                    performSearch(query, $('#mobileSearchResults'));
+                }
+            });
+
+            $('#mobileSearchBtn').on('click', function() {
+                const query = $('#mobileSearchInput').val();
+                if (query && query.trim().length >= 2) {
+                    window.location.href = '@Url.Action("AllProducts", "Products")?search=' + encodeURIComponent(query);
+                }
+            });
+
+            $('#mobileSearchForm').on('submit', function(e) {
+                e.preventDefault();
+                const query = $('#mobileSearchInput').val();
+                if (query && query.trim().length >= 2) {
+                    window.location.href = '@Url.Action("AllProducts", "Products")?search=' + encodeURIComponent(query);
+                }
+            });
+
+            // Close search dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.topbar-search').length) {
+                    $('.search-results-dropdown').removeClass('show');
+                }
+            });
+
+            // Handle keyboard navigation in search results
+            $('.search-input').on('keydown', function(e) {
+                const container = $(this).closest('.topbar-search').find('.search-results-dropdown');
+                const items = container.find('.search-result-item');
+                const focused = container.find('.search-result-item:focus');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (focused.length === 0) {
+                        items.first().focus();
+                    } else {
+                        focused.next('.search-result-item').focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (focused.length > 0) {
+                        focused.prev('.search-result-item').focus();
+                    }
+                } else if (e.key === 'Escape') {
+                    container.removeClass('show');
+                    $(this).blur();
+                }
+            });
+        });
+    </script>
+
+    @Html.AntiForgeryToken()
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

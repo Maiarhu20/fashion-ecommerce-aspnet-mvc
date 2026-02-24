@@ -1,0 +1,346 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<Domain.Models.User> UserManager
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var primaryColor = "#912356";
+    var lightColor = "#f9e8e9";
+    var white = "#ffffff";
+}
+
+<footer class="footer mt-auto" style="background-color: @primaryColor; color: white; margin-top: auto;">
+    <div class="container-fluid py-4">
+        <div class="row px-xl-5">
+            <!-- Admin Info Column -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="footer-logo mb-3">
+                    <img src="~/images/logoLabella1.png" alt="La Bella Admin" style="height: 60px; filter: brightness(0) invert(1);">
+                </div>
+                <p class="mb-3" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+                    <strong>Admin Dashboard</strong> - Manage your store, products, orders, and customers efficiently.
+                </p>
+                <div class="admin-stats d-flex flex-wrap">
+                    <div class="mr-4 mb-2">
+                        <small style="color: rgba(255,255,255,0.7);">User:</small><br>
+                        <span style="color: white; font-weight: 500;">
+                            @{
+                                var user = await UserManager.GetUserAsync(User);
+                                var displayName = user?.Name ?? User.Identity?.Name ?? "Administrator";
+                                @displayName
+                            }
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <small style="color: rgba(255,255,255,0.7);">Role:</small><br>
+                        <span style="color: white; font-weight: 500;">Administrator</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Admin Links -->
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h6 class="font-weight-bold mb-3" style="color: white;">Admin Tools</h6>
+                <ul class="list-unstyled" style="font-size: 14px;">
+                    <li class="mb-2">
+                        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-tachometer-alt mr-2" style="color: @lightColor; font-size: 12px;"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-shopping-bag mr-2" style="color: @lightColor; font-size: 12px;"></i>Orders
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a asp-area="Admin" asp-controller="Products" asp-action="Index" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-box-open mr-2" style="color: @lightColor; font-size: 12px;"></i>Products
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a asp-area="Admin" asp-controller="Auth" asp-action="ChangePassword" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-key mr-2" style="color: @lightColor; font-size: 12px;"></i>Change Password
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- System Info -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h6 class="font-weight-bold mb-3" style="color: white;">System</h6>
+                <div class="system-info">
+                    @* <div class="d-flex mb-2">
+                        <div class="icon mr-3" style="width: 30px; text-align: center;">
+                            <i class="fas fa-server" style="color: @lightColor; font-size: 16px;"></i>
+                        </div>
+                        <div>
+                            <small style="color: rgba(255,255,255,0.7);">Status:</small>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.9); font-size: 13px;">
+                                <span class="badge badge-success" style="background-color: #28a745;">Online</span>
+                            </p>
+                        </div>
+                    </div> *@
+                    @* <div class="d-flex mb-2">
+                        <div class="icon mr-3" style="width: 30px; text-align: center;">
+                            <i class="fas fa-clock" style="color: @lightColor; font-size: 16px;"></i>
+                        </div>
+                        <div>
+                            <small style="color: rgba(255,255,255,0.7);">Server Time:</small>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.9); font-size: 13px;">
+                                @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                            </p>
+                        </div>
+                    </div> *@
+                    <div class="d-flex">
+                        <div class="icon mr-3" style="width: 30px; text-align: center;">
+                            <i class="fas fa-shield-alt" style="color: @lightColor; font-size: 16px;"></i>
+                        </div>
+                        <div>
+                            <small style="color: rgba(255,255,255,0.7);">Security:</small>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.9); font-size: 13px;">
+                                <span class="badge badge-info" style="background-color: #17a2b8;">Secure</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support & Quick Actions -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h6 class="font-weight-bold mb-3" style="color: white;">Support & Actions</h6>
+                <div class="quick-actions">
+                    <form asp-area="Admin" asp-controller="Auth" asp-action="Logout" method="post" id="footerLogoutForm">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="btn btn-sm btn-light w-100 mb-2"
+                                style="background-color: @lightColor; color: @primaryColor; border: none;">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </form>
+
+                    <a href="https://wa.me/201275558078" target="_blank"
+                       class="btn btn-sm btn-outline-light w-100 mb-2">
+                        <i class="fab fa-whatsapp mr-2"></i>Support
+                    </a>
+
+                    <a href="@Url.Action("Index", "Home", new { area = "" })" target="_blank"
+                       class="btn btn-sm btn-outline-light w-100">
+                        <i class="fas fa-store mr-2"></i>Visit Store
+                    </a>
+                </div>
+
+                <div class="mt-3" style="font-size: 12px; color: rgba(255,255,255,0.7);">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <span>Session expires in <span id="sessionTimer">30:00</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Bar -->
+    <div class="border-top py-3" style="border-color: rgba(255,255,255,0.1) !important;">
+        <div class="container-fluid px-xl-5">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-left">
+                    <p class="mb-0" style="color: rgba(255,255,255,0.7); font-size: 13px;">
+                        &copy; @DateTime.Now.Year <strong>La Bella Scarves</strong> - Admin Dashboard v1.0
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <p class="mb-0" style="color: rgba(255,255,255,0.7); font-size: 13px;">
+                        Developed and Designed by
+                        <a href="https://www.linkedin.com/in/maiar-hussein/"
+                           target="_blank"
+                           class="text-white-50"
+                           style="text-decoration: none;"
+                           title="View Developer's LinkedIn">
+                            Maiar Hussein
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        font-family: 'Poppins', sans-serif;
+        position: relative;
+        bottom: 0;
+        width: 100%;
+    }
+
+        .footer a {
+            transition: all 0.3s ease;
+        }
+
+            .footer a:hover {
+                color: #f9e8e9 !important;
+                text-decoration: underline !important;
+                transform: translateX(3px);
+            }
+
+        /* FIXED: More specific selector for buttons */
+        .footer .btn-outline-light {
+            border-color: white !important;
+            color: white !important;
+        }
+
+            .footer .btn-outline-light:hover {
+                background-color: #f9e8e9 !important;
+                color: #912356 !important;
+                border-color: #f9e8e9 !important;
+            }
+
+        .footer .btn-light {
+            background-color: #f9e8e9 !important;
+            color: #912356 !important;
+            border: none !important;
+        }
+
+            .footer .btn-light:hover {
+                background-color: white !important;
+                color: #912356 !important;
+            }
+
+    .admin-stats {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 13px;
+    }
+
+    .system-info .icon {
+        flex-shrink: 0;
+    }
+
+    .quick-actions .btn {
+        transition: all 0.3s ease;
+    }
+
+        .quick-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
+
+    #sessionTimer {
+        color: #f9e8e9;
+        font-weight: bold;
+        font-family: monospace;
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 768px) {
+        .footer .col-md-6 {
+            text-align: center !important;
+        }
+
+        .admin-stats {
+            justify-content: center;
+        }
+
+        .system-info .d-flex {
+            justify-content: center;
+        }
+
+        .quick-actions {
+            text-align: center;
+        }
+
+            .quick-actions .btn {
+                max-width: 250px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .footer {
+            text-align: center;
+        }
+
+        .footer-logo {
+            text-align: center;
+        }
+
+        .list-unstyled {
+            padding-left: 0;
+        }
+    }
+</style>
+
+<script>
+    // Session timer for admin footer
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize session timer (30 minutes = 1800 seconds)
+        let sessionTime = 1800;
+        const sessionTimerElement = document.getElementById('sessionTimer');
+
+        if (sessionTimerElement) {
+            const updateTimer = () => {
+                const minutes = Math.floor(sessionTime / 60);
+                const seconds = sessionTime % 60;
+                sessionTimerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (sessionTime <= 300) { // Last 5 minutes
+                    sessionTimerElement.style.color = '#ffc107'; // Yellow warning
+                }
+
+                if (sessionTime <= 60) { // Last minute
+                    sessionTimerElement.style.color = '#dc3545'; // Red warning
+                }
+
+                if (sessionTime <= 0) {
+                    clearInterval(timerInterval);
+                    sessionTimerElement.textContent = '00:00';
+                    // Optional: Show logout warning
+                    showSessionWarning();
+                } else {
+                    sessionTime--;
+                }
+            };
+
+            const timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Initial call
+        }
+
+        // Footer logout confirmation
+        const footerLogoutForm = document.getElementById('footerLogoutForm');
+        if (footerLogoutForm) {
+            footerLogoutForm.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to logout?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Session warning function
+        function showSessionWarning() {
+            const warningHtml = `
+                <div class="alert alert-warning alert-dismissible fade show position-fixed"
+                     style="bottom: 20px; right: 20px; z-index: 9999; max-width: 300px;">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong><i class="fas fa-exclamation-triangle mr-2"></i>Session Expired</strong><br>
+                    Your session has expired. Please login again.
+                </div>
+            `;
+
+            // Remove any existing warning
+            const existingWarning = document.querySelector('.alert-warning.position-fixed');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+
+            document.body.insertAdjacentHTML('beforeend', warningHtml);
+        }
+
+        // Reset timer on user activity
+        const resetTimer = () => {
+            sessionTime = 1800; // Reset to 30 minutes
+        };
+
+        // Add event listeners to reset timer on user activity
+        ['mousemove', 'keypress', 'click', 'scroll'].forEach(event => {
+            document.addEventListener(event, resetTimer);
+        });
+    });
+</script>

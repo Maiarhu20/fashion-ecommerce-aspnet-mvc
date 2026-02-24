@@ -1,0 +1,1140 @@
+﻿@model Core.DTOs.Products.ProductUpdateDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Edit Product";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Edit Product</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Edit Product Details</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="editForm">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <!-- Hidden inputs for existing images (for tracking deletions) -->
+                        @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+                        {
+                            <div id="existingImagesContainer" style="display: none;">
+                                @foreach (var imageUrl in Model.ImageUrls)
+                                {
+                                    <input type="hidden" class="existing-image-input" name="ImageUrls" value="@imageUrl" data-url="@imageUrl" />
+                                }
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Name" class="control-label font-weight-bold">Product Name *</label>
+                                    <input asp-for="Name" class="form-control" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="CategoryId" class="control-label font-weight-bold">Category *</label>
+                                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+                                        <option value="">-- Select Category --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Price" class="control-label font-weight-bold">Price *</label>
+                                    <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" />
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="DiscountPercent" class="control-label font-weight-bold">Discount Percent</label>
+                                    <input asp-for="DiscountPercent" class="form-control" type="number" step="0.01" min="0" max="100" />
+                                    <span asp-validation-for="DiscountPercent" class="text-danger"></span>
+                                    <small class="form-text text-muted">Enter discount percentage (0-100). Leave empty for no discount.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="StockQuantity" class="control-label font-weight-bold">Stock Quantity *</label>
+                                    <input asp-for="StockQuantity" class="form-control" type="number" min="0" />
+                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                </div>
+
+                                <!-- Multiple Image Upload -->
+                                <div class="form-group">
+                                    <label class="control-label font-weight-bold">Product Images *</label>
+
+                                    <!-- Existing Images with Remove Option -->
+                                    @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+                                    {
+                                        <div class="mb-3">
+                                            <label class="text-muted font-weight-bold">Current Images (click × to remove):</label>
+                                            <div class="d-flex flex-wrap gap-2 mt-2" id="existingImagesPreview">
+                                                @foreach (var imageUrl in Model.ImageUrls)
+                                                {
+                                                    <div class="existing-image-container position-relative" data-url="@imageUrl">
+                                                        <img src="@imageUrl" class="img-thumbnail existing-image-preview" style="width: 100px; height: 100px; object-fit: cover;" alt="Product image">
+                                                        <button type="button" class="btn btn-sm btn-danger remove-existing-image" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-times" style="font-size: 12px;"></i>
+                                                        </button>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <small class="form-text text-muted">Click the × button to remove images. Add new ones below to include additional images.</small>
+                                        </div>
+                                    }
+
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="imageFiles" name="ImageFiles" multiple accept="image/*">
+                                        <label class="custom-file-label" for="imageFiles">Add more images (optional)</label>
+                                    </div>
+                                    @* <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP. Max 10 images total, 5MB each.</small> *@
+                                    <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP. 5MB max per image.</small>
+
+                                    <!-- New Image Preview -->
+                                    <div id="imagePreview" class="mt-3 row"></div>
+                                    <div id="imageError" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <!-- Color Palette -->
+                                <div class="form-group">
+                                    <label class="control-label font-weight-bold">Colors *</label>
+                                    <div class="color-palette mb-3">
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            <!-- Common Colors -->
+                                            <div class="color-option" data-color="#FF0000" title="Red" style="background-color: #FF0000;"></div>
+                                            <div class="color-option" data-color="#00FF00" title="Green" style="background-color: #00FF00;"></div>
+                                            <div class="color-option" data-color="#0000FF" title="Blue" style="background-color: #0000FF;"></div>
+                                            <div class="color-option" data-color="#FFFF00" title="Yellow" style="background-color: #FFFF00;"></div>
+                                            <div class="color-option" data-color="#FF00FF" title="Magenta" style="background-color: #FF00FF;"></div>
+                                            <div class="color-option" data-color="#00FFFF" title="Cyan" style="background-color: #00FFFF;"></div>
+                                            <div class="color-option" data-color="#000000" title="Black" style="background-color: #000000;"></div>
+                                            <div class="color-option" data-color="#FFFFFF" title="White" style="background-color: #FFFFFF; border: 2px solid #ccc;"></div>
+                                            <div class="color-option" data-color="#808080" title="Gray" style="background-color: #808080;"></div>
+                                            <div class="color-option" data-color="#FFA500" title="Orange" style="background-color: #FFA500;"></div>
+                                            <div class="color-option" data-color="#800080" title="Purple" style="background-color: #800080;"></div>
+                                            <div class="color-option" data-color="#FFC0CB" title="Pink" style="background-color: #FFC0CB;"></div>
+                                            <div class="color-option" data-color="#A52A2A" title="Brown" style="background-color: #A52A2A;"></div>
+                                            <div class="color-option" data-color="#008000" title="Dark Green" style="background-color: #008000;"></div>
+                                            <div class="color-option" data-color="#000080" title="Navy" style="background-color: #000080;"></div>
+                                        </div>
+
+                                        <!-- Custom Color Picker -->
+                                        <div class="input-group">
+                                            <input type="color" id="customColor" class="form-control" style="height: 38px; padding: 2px;" value="#FF0000">
+                                            <div class="input-group-append">
+                                                <button type="button" id="activateBrush" class="btn btn-dark" title="Pick color from screen">
+                                                    <i class="fas fa-eye-dropper"></i>
+                                                </button>
+                                                <button type="button" id="addCustomColor" class="btn btn-outline-primary">
+                                                    <i class="fas fa-plus"></i> Add Custom
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted" id="brushSupportHint">Tip: Tap the brush, then tap any element on the page to grab its color.</small>
+                                    </div>
+
+                                    <!-- Selected Colors Display -->
+                                    <div id="selectedColors" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                    <div id="colorError" class="text-danger small mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Names Input Section -->
+                        <div class="form-group mt-3" id="colorNamesContainer" style="display: none;">
+                            <label class="control-label font-weight-bold">Color Names *</label>
+                            <div id="colorNameInputs"></div>
+                            <small class="form-text text-muted">Enter display names for each selected color.</small>
+                            <div id="colorNameError" class="text-danger small mt-1"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label font-weight-bold">Description *</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" id="submitButton">
+                                <i class="fas fa-save mr-2"></i>Update Product
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetColorName(string hexCode)
+    {
+        var colorMap = new Dictionary<string, string>
+        {
+            {"#FF0000", "Red"}, {"#00FF00", "Green"}, {"#0000FF", "Blue"},
+            {"#FFFF00", "Yellow"}, {"#FF00FF", "Magenta"}, {"#00FFFF", "Cyan"},
+            {"#000000", "Black"}, {"#FFFFFF", "White"}, {"#808080", "Gray"},
+            {"#FFA500", "Orange"}, {"#800080", "Purple"}, {"#FFC0CB", "Pink"},
+            {"#A52A2A", "Brown"}, {"#008000", "Dark Green"}, {"#000080", "Navy"}
+        };
+
+        var normalizedHex = hexCode.Trim().ToUpper();
+        return colorMap.ContainsKey(normalizedHex) ? colorMap[normalizedHex] : "Custom Color";
+    }
+}
+
+@section Styles {
+    <style>
+        .color-option {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+            .color-option:hover {
+                transform: scale(1.15);
+                border-color: #007bff;
+            }
+
+            .color-option.selected {
+                border-color: #28a745;
+                transform: scale(1.15);
+                box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
+            }
+
+        .selected-color-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 6px 12px;
+            margin: 4px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+            .selected-color-chip .color-preview {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                margin-right: 8px;
+                border: 1px solid #ccc;
+            }
+
+        .image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .image-preview {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+            cursor: crosshair;
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+
+            .image-preview:active {
+                transform: scale(0.95);
+                border-color: #912356;
+            }
+
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .existing-image-container {
+            position: relative;
+            display: inline-block;
+            margin: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .existing-image-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: crosshair;
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+
+            .existing-image-preview:active {
+                transform: scale(0.95);
+                border-color: #912356;
+            }
+
+        .remove-existing-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+            opacity: 0.9;
+            transition: all 0.2s ease;
+        }
+
+            .remove-existing-image:hover {
+                opacity: 1;
+                transform: scale(1.1);
+                background: #c82333;
+            }
+
+        .existing-image-container.removing {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .custom-file-label::after {
+            content: "Browse";
+        }
+
+        .color-input-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-right: 5px;
+        }
+
+        .color-name-input {
+            border-left: none !important;
+        }
+
+        .input-group-prepend .input-group-text {
+            background-color: #f8f9fa;
+            border-right: none;
+        }
+
+        .input-group-append .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        #activateBrush {
+            border-left: none;
+            border-right: none;
+        }
+
+        #submitButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Animation for notification */
+        @@keyframes slideIn {
+            from
+
+        {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        }
+
+        /* Mobile improvements */
+        @@media (max-width: 768px) {
+            .image-preview, .existing-image-preview
+
+        {
+            width: 100px;
+            height: 100px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            margin: 2px;
+        }
+
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            // Initialize data from server
+            let selectedColors = [];
+            let selectedColorNames = {};
+            let imageFiles = [];
+            let existingImageUrls = @Html.Raw(Json.Serialize(Model.ImageUrls ?? new List<string>()));
+            let isFormValid = false;
+            let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Load existing colors and names from model
+            @if (Model.ColorHexCodes != null && Model.ColorHexCodes.Any())
+            {
+                        for (int i = 0; i < Model.ColorHexCodes.Count; i++)
+                        {
+                                    var colorHex = Model.ColorHexCodes[i];
+                                    var colorName = (Model.ColorNames != null && i < Model.ColorNames.Count)
+                                                    ? Model.ColorNames[i]
+                                                    : GetColorName(colorHex);
+                                    <text>
+                                    selectedColors.push('@colorHex');
+                                    selectedColorNames['@colorHex'] = '@colorName';
+                                    </text>
+                        }
+            }
+
+            // Remove duplicates
+            selectedColors = [...new Set(selectedColors)];
+            existingImageUrls = [...new Set(existingImageUrls)];
+
+            // ==================== IMPROVED BRUSH/COLOR PICKER ====================
+
+            // Check EyeDropper support
+            const hasEyeDropper = 'EyeDropper' in window;
+
+            if (!hasEyeDropper) {
+                $('#brushSupportHint').html(
+                    '<span class="text-info"><i class="fas fa-info-circle"></i> Tap any image or element to pick its color.</span>'
+                );
+                $('#activateBrush').html('<i class="fas fa-hand-pointer"></i>').attr('title', 'Pick color from page');
+            }
+
+            // Enhanced brush button click handler
+            $('#activateBrush').on('click', async function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const originalContent = btn.html();
+
+                if (hasEyeDropper) {
+                    // Use native EyeDropper API (Chrome/Edge)
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').addClass('btn-warning');
+
+                    try {
+                        const eyeDropper = new EyeDropper();
+                        const result = await eyeDropper.open();
+
+                        const pickedColor = result.sRGBHex.toUpperCase();
+                        $('#customColor').val(pickedColor);
+
+                        // Visual feedback
+                        $('#customColor').fadeOut(100).fadeIn(100);
+                        showColorPickedNotification(pickedColor);
+                    } catch (error) {
+                        console.log("User cancelled color picker");
+                    } finally {
+                        btn.html(originalContent).removeClass('btn-warning');
+                    }
+                } else {
+                    // Fallback: Enable universal element picking
+                    activateUniversalColorPicker(btn, originalContent);
+                }
+            });
+
+            // ==================== UNIVERSAL COLOR PICKER (Fallback) ====================
+            let isPickingColor = false;
+            let pickerOverlay = null;
+
+            function activateUniversalColorPicker(btn, originalContent) {
+                if (isPickingColor) {
+                    deactivateUniversalColorPicker(btn, originalContent);
+                    return;
+                }
+
+                isPickingColor = true;
+                btn.html('<i class="fas fa-times"></i> Cancel').addClass('btn-danger');
+
+                // Create overlay with cursor feedback
+                pickerOverlay = $('<div>').css({
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 9999,
+                    cursor: 'crosshair',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                });
+
+                // Add visual indicator
+                const indicator = $('<div>').css({
+                    position: 'fixed',
+                    top: '10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    padding: '10px 20px',
+                    backgroundColor: 'rgba(145, 35, 86, 0.95)',
+                    color: 'white',
+                    borderRadius: '5px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                    zIndex: 10000
+                }).html('<i class="fas fa-eye-dropper"></i> Tap any element to pick its color');
+
+                $('body').append(pickerOverlay).append(indicator);
+
+                // Universal click/touch handler
+                pickerOverlay.on('click touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Get the element under the click/touch
+                    const touch = e.type === 'touchend' ? e.originalEvent.changedTouches[0] : e;
+                    const x = touch.clientX;
+                    const y = touch.clientY;
+
+                    // Temporarily hide overlay to get element underneath
+                    pickerOverlay.hide();
+                    indicator.hide();
+                    const elementBelow = document.elementFromPoint(x, y);
+                    pickerOverlay.show();
+                    indicator.show();
+
+                    if (elementBelow) {
+                        const color = getColorFromElement(elementBelow, x, y);
+                        if (color) {
+                            $('#customColor').val(color);
+                            showColorPickedNotification(color);
+                            deactivateUniversalColorPicker(btn, originalContent);
+                        }
+                    }
+                });
+
+                indicator.on('click touchend', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            function deactivateUniversalColorPicker(btn, originalContent) {
+                isPickingColor = false;
+                btn.html(originalContent).removeClass('btn-danger');
+                if (pickerOverlay) {
+                    pickerOverlay.remove();
+                    $('div[style*="position: fixed"][style*="z-index: 10000"]').remove();
+                    pickerOverlay = null;
+                }
+            }
+
+            // ==================== COLOR EXTRACTION FROM ELEMENTS ====================
+            function getColorFromElement(element, x, y) {
+                try {
+                    // Try to get color from images first
+                    if (element.tagName === 'IMG') {
+                        return getColorFromImage(element, x, y);
+                    }
+
+                    // Try background image
+                    const bgImage = window.getComputedStyle(element).backgroundImage;
+                    if (bgImage && bgImage !== 'none') {
+                        // Create temporary image to extract color
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        const url = bgImage.slice(5, -2); // Remove url(" and ")
+                        img.src = url;
+                        return getColorFromImage(img, x, y);
+                    }
+
+                    // Fall back to background color
+                    const bgColor = window.getComputedStyle(element).backgroundColor;
+                    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                        return rgbToHex(bgColor);
+                    }
+
+                    // Try parent elements
+                    if (element.parentElement) {
+                        return getColorFromElement(element.parentElement, x, y);
+                    }
+                } catch (error) {
+                    console.error('Error extracting color:', error);
+                }
+                return null;
+            }
+
+            // ==================== IMPROVED IMAGE COLOR PICKING ====================
+            function getColorFromImage(img, clientX, clientY) {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+
+                    ctx.drawImage(img, 0, 0);
+
+                    // Calculate precise coordinates
+                    const rect = img.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+
+                    const x = Math.floor((clientX - rect.left) * scaleX);
+                    const y = Math.floor((clientY - rect.top) * scaleY);
+
+                    // Ensure coordinates are within bounds
+                    const boundedX = Math.max(0, Math.min(x, canvas.width - 1));
+                    const boundedY = Math.max(0, Math.min(y, canvas.height - 1));
+
+                    const pixel = ctx.getImageData(boundedX, boundedY, 1, 1).data;
+                    const hex = rgbToHex(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
+
+                    return hex;
+                } catch (error) {
+                    console.error('Error picking color from image:', error);
+                    return null;
+                }
+            }
+
+            // Image preview click/touch handler with improved mobile support
+            $(document).on('click touchend', '.image-preview, .existing-image-preview', function(e) {
+                // Don't trigger if clicking the remove button
+                if ($(e.target).hasClass('remove-existing-image') || $(e.target).closest('.remove-existing-image').length) {
+                    return;
+                }
+
+                e.preventDefault();
+                const touch = e.type === 'touchend' ? e.originalEvent.changedTouches[0] : e;
+
+                const color = getColorFromImage(e.target, touch.clientX, touch.clientY);
+                if (color) {
+                    $('#customColor').val(color);
+                    showColorPickedNotification(color);
+                }
+            });
+
+            // ==================== HELPER FUNCTIONS ====================
+            function rgbToHex(rgb) {
+                const result = rgb.match(/\d+/g);
+                if (!result || result.length < 3) return '#000000';
+
+                const r = parseInt(result[0]);
+                const g = parseInt(result[1]);
+                const b = parseInt(result[2]);
+
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+            }
+
+            function showColorPickedNotification(color) {
+                const notification = $(`
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        background: white;
+                        border: 2px solid ${color};
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        z-index: 10001;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        font-weight: bold;
+                        animation: slideIn 0.3s ease;
+                    ">
+                        <div style="
+                            width: 30px;
+                            height: 30px;
+                            background: ${color};
+                            border: 1px solid #ccc;
+                            border-radius: 4px;
+                        "></div>
+                        <span>Color Picked: ${color}</span>
+                    </div>
+                `);
+
+                $('body').append(notification);
+                setTimeout(() => notification.fadeOut(300, () => notification.remove()), 2000);
+            }
+
+            // ==================== REST OF EDIT PAGE LOGIC ====================
+
+            // Default color map
+            function getDefaultColorName(hexCode) {
+                const colorMap = {
+                    "#FF0000": "Red", "#00FF00": "Green", "#0000FF": "Blue",
+                    "#FFFF00": "Yellow", "#FF00FF": "Magenta", "#00FFFF": "Cyan",
+                    "#000000": "Black", "#FFFFFF": "White", "#808080": "Gray",
+                    "#FFA500": "Orange", "#800080": "Purple", "#FFC0CB": "Pink",
+                    "#A52A2A": "Brown", "#008000": "Dark Green", "#000080": "Navy"
+                };
+                return colorMap[hexCode.toUpperCase()] || "Custom Color";
+            }
+
+            // Initialize UI from loaded data
+            function initializeFromModel() {
+                // Clear existing UI
+                $('#selectedColors').empty();
+                $('#colorNameInputs').empty();
+
+                // Mark palette colors as selected
+                selectedColors.forEach(color => {
+                    const colorElement = $(`.color-option[data-color="${color}"]`);
+                    if (colorElement.length) {
+                        colorElement.addClass('selected');
+                    }
+                });
+
+                // Build chips and inputs for each color
+                selectedColors.forEach(color => {
+                    const colorName = selectedColorNames[color] || getDefaultColorName(color);
+                    addColorChip(color, colorName);
+                    addColorNameInputField(color, colorName);
+                });
+
+                // Show/hide color names container
+                if (selectedColors.length > 0) {
+                    $('#colorNamesContainer').show();
+                } else {
+                    $('#colorNamesContainer').hide();
+                }
+
+                validateForm();
+            }
+
+            // Add color chip to display
+            function addColorChip(color, colorName) {
+                const colorId = color.replace('#', '');
+                if ($(`#colorChip-${colorId}`).length === 0) {
+                    const chip = $(`
+                        <div class="selected-color-chip" id="colorChip-${colorId}" data-color="${color}">
+                            <div class="color-preview" style="background-color: ${color};"></div>
+                            <span class="chip-label">${colorName} (${color})</span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ml-1 remove-color-btn" data-color="${color}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `);
+                    $('#selectedColors').append(chip);
+                }
+            }
+
+            // Add color name input field
+            function addColorNameInputField(color, colorName) {
+                const colorId = color.replace('#', '');
+                if ($(`#colorNameGroup-${colorId}`).length === 0) {
+                    const inputGroup = $(`
+                        <div class="input-group mb-2" id="colorNameGroup-${colorId}" data-color="${color}">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <div class="color-input-preview" style="background-color: ${color};"></div>
+                                </span>
+                                <span class="input-group-text" style="border-left: none;">${color}</span>
+                            </div>
+                            <input type="text"
+                                   class="form-control color-name-input"
+                                   id="colorName-${colorId}"
+                                   data-color="${color}"
+                                   placeholder="Enter color name (e.g., Midnight Black)"
+                                   value="${colorName}"
+                                   maxlength="50">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary remove-color-input-btn" data-color="${color}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                    $('#colorNameInputs').append(inputGroup);
+                }
+            }
+
+            // Update chip label when name changes
+            function updateChipLabel(color) {
+                const colorId = color.replace('#', '');
+                const name = selectedColorNames[color] || getDefaultColorName(color);
+                $(`#colorChip-${colorId} .chip-label`).text(`${name} (${color})`);
+            }
+
+            // Remove a color completely
+            function removeColor(color) {
+                const colorId = color.replace('#', '');
+
+                // Remove from arrays/objects
+                selectedColors = selectedColors.filter(c => c !== color);
+                delete selectedColorNames[color];
+
+                // Remove UI elements
+                $(`#colorChip-${colorId}`).remove();
+                $(`#colorNameGroup-${colorId}`).remove();
+
+                // Remove selected class from palette
+                $(`.color-option[data-color="${color}"]`).removeClass('selected');
+
+                // Hide container if no colors
+                if (selectedColors.length === 0) {
+                    $('#colorNamesContainer').hide();
+                }
+
+                validateForm();
+            }
+
+            // Toggle color selection from palette
+            function toggleColorSelection(color, element) {
+                if (selectedColors.includes(color)) {
+                    removeColor(color);
+                } else {
+                    // if (selectedColors.length < 10) {
+                        selectedColors.push(color);
+                        const defaultName = getDefaultColorName(color);
+                        selectedColorNames[color] = defaultName;
+
+                        element.addClass('selected');
+                        addColorChip(color, defaultName);
+                        addColorNameInputField(color, defaultName);
+
+                        $('#colorNamesContainer').show();
+                        validateForm();
+                    // } else {
+                    //     alert('Maximum 10 colors allowed per product.');
+                    // }
+                }
+            }
+
+            // === EVENT HANDLERS ===
+
+            // Palette color click
+            $('.color-option').on('click', function() {
+                const color = $(this).data('color');
+                toggleColorSelection(color, $(this));
+            });
+
+            // Custom color add
+            $('#addCustomColor').on('click', function(e) {
+                e.preventDefault();
+                const customColor = $('#customColor').val().toUpperCase();
+
+                if (!customColor) {
+                    alert('Please select a valid color.');
+                    return;
+                }
+
+                const formattedColor = customColor.startsWith('#') ? customColor : '#' + customColor;
+
+                if (!selectedColors.includes(formattedColor)) {
+                    // if (selectedColors.length < 10) {
+                        selectedColors.push(formattedColor);
+                        const defaultName = getDefaultColorName(formattedColor);
+                        selectedColorNames[formattedColor] = defaultName;
+
+                        // Mark in palette if exists
+                        const existingPalette = $(`.color-option[data-color="${formattedColor}"]`);
+                        if (existingPalette.length) {
+                            existingPalette.addClass('selected');
+                        }
+
+                        addColorChip(formattedColor, defaultName);
+                        addColorNameInputField(formattedColor, defaultName);
+
+                        $('#colorNamesContainer').show();
+                        validateForm();
+                    // } else {
+                    //     alert('Maximum 10 colors allowed per product.');
+                    // }
+                } else {
+                    alert('This color is already selected.');
+                }
+            });
+
+            // Remove color from chip button
+            $(document).on('click', '.remove-color-btn', function(e) {
+                e.preventDefault();
+                const color = $(this).data('color');
+                removeColor(color);
+            });
+
+            // Remove color from input button
+            $(document).on('click', '.remove-color-input-btn', function(e) {
+                e.preventDefault();
+                const color = $(this).data('color');
+                removeColor(color);
+            });
+
+            // Color name input change
+            $(document).on('input', '.color-name-input', function() {
+                const color = $(this).data('color');
+                const newName = $(this).val().trim();
+
+                // Update the stored name
+                selectedColorNames[color] = newName;
+
+                // Update the chip label
+                updateChipLabel(color);
+
+                // Validate form
+                validateForm();
+            });
+
+            // File input change
+            // $('#imageFiles').on('change', function() {
+            //     const files = $(this)[0].files;
+            //     const fileNames = Array.from(files).map(file => file.name).join(', ');
+            //     $(this).next('.custom-file-label').html(fileNames || 'Add more images (optional)');
+
+            //     imageFiles = Array.from(files);
+            //     previewImages(files);
+            //     validateForm();
+            // });
+            $('#imageFiles').on('change', function() {
+                const files = $(this)[0].files;
+                const fileCount = files.length;
+                const labelText = fileCount === 0 ? 'Add more images (optional)'
+                                : fileCount === 1 ? files[0].name
+                                : `${fileCount} images selected`;
+                $(this).next('.custom-file-label').html(labelText);
+
+                imageFiles = Array.from(files);
+                previewImages(files);
+                validateForm();
+            });
+
+            // Image preview
+            function previewImages(files) {
+                $('#imagePreview').empty();
+                $('#imageError').text('');
+
+                if (files.length === 0) return;
+
+                Array.from(files).forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            $('#imageError').append(`File "${file.name}" is too large (max 5MB).<br>`);
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = $(`
+                                <div class="image-preview-container">
+                                    <img src="${e.target.result}" class="image-preview" alt="New preview ${index + 1}">
+                                    <button type="button" class="remove-image" data-index="${index}">×</button>
+                                </div>
+                            `);
+                            $('#imagePreview').append(preview);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $('#imageError').append(`File "${file.name}" is not a valid image.<br>`);
+                    }
+                });
+            }
+
+            // Remove new image preview
+            $(document).on('click', '.remove-image', function() {
+                const index = $(this).data('index');
+                $(this).closest('.image-preview-container').remove();
+                imageFiles.splice(index, 1);
+                updateFileInput();
+                validateForm();
+            });
+
+            // Remove existing image
+            $(document).on('click', '.remove-existing-image', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const container = $(this).closest('.existing-image-container');
+                const imageUrl = container.data('url');
+
+                container.addClass('removing');
+
+                setTimeout(() => {
+                    container.remove();
+                    existingImageUrls = existingImageUrls.filter(url => url !== imageUrl);
+                    $(`.existing-image-input[data-url="${imageUrl}"]`).remove();
+                    validateForm();
+
+                    if (existingImageUrls.length === 0 && imageFiles.length === 0) {
+                        showNoImagesMessage();
+                    }
+                }, 300);
+            });
+
+            function showNoImagesMessage() {
+                if (!$('#noImagesMessage').length) {
+                    $('#existingImagesPreview').before(
+                        '<div id="noImagesMessage" class="alert alert-warning alert-dismissible fade show mt-2">' +
+                        '<i class="fas fa-exclamation-triangle mr-2"></i>All images have been removed. Please add at least one image.' +
+                        '</div>'
+                    );
+                }
+            }
+
+            // function updateFileInput() {
+            //     const dataTransfer = new DataTransfer();
+            //     imageFiles.forEach(file => dataTransfer.items.add(file));
+
+            //     const fileInput = $('#imageFiles')[0];
+            //     fileInput.files = dataTransfer.files;
+
+            //     const fileNames = imageFiles.map(file => file.name).join(', ');
+            //     $(fileInput).next('.custom-file-label').html(fileNames || 'Add more images (optional)');
+            // }
+            function updateFileInput() {
+                const dataTransfer = new DataTransfer();
+                imageFiles.forEach(file => dataTransfer.items.add(file));
+
+                const fileInput = $('#imageFiles')[0];
+                fileInput.files = dataTransfer.files;
+
+                const fileCount = imageFiles.length;
+                const labelText = fileCount === 0 ? 'Add more images (optional)'
+                                : fileCount === 1 ? imageFiles[0].name
+                                : `${fileCount} images selected`;
+                $(fileInput).next('.custom-file-label').html(labelText);
+            }
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+
+                const name = $('#Name').val();
+                const description = $('#Description').val();
+                const categoryId = $('#CategoryId').val();
+                const price = parseFloat($('#Price').val());
+                const stockQuantity = parseInt($('#StockQuantity').val());
+
+                if (!name || name.trim() === '') isValid = false;
+                if (!description || description.trim() === '') isValid = false;
+                if (!categoryId) isValid = false;
+                if (isNaN(price) || price <= 0) isValid = false;
+                if (isNaN(stockQuantity) || stockQuantity < 0) isValid = false;
+
+                // Validate colors
+                if (selectedColors.length === 0) {
+                    $('#colorError').text('Please select at least one color.');
+                    isValid = false;
+                } else {
+                    $('#colorError').text('');
+                }
+
+                // Validate color names
+                if (selectedColors.length > 0) {
+                    let missingNames = [];
+                    selectedColors.forEach(color => {
+                        const name = selectedColorNames[color] || '';
+                        if (!name.trim()) {
+                            missingNames.push(color);
+                        }
+                    });
+
+                    if (missingNames.length > 0) {
+                        $('#colorNameError').text(`Please enter a name for each color. Missing: ${missingNames.join(', ')}`);
+                        isValid = false;
+                    } else {
+                        $('#colorNameError').text('');
+                    }
+                }
+
+                // Validate images
+                const totalImages = existingImageUrls.length + imageFiles.length;
+                if (totalImages === 0) {
+                    $('#imageError').text('Please add at least one product image.');
+                    isValid = false;
+                } else if (!$('#imageError').text().includes('too large') && !$('#imageError').text().includes('not a valid')) {
+                    // Don't clear error if there are file-specific errors
+                    if ($('#imageError').text() === 'Please add at least one product image.') {
+                        $('#imageError').text('');
+                    }
+                }
+
+                if ($('#imageError').text().includes('too large') || $('#imageError').text().includes('not a valid image')) {
+                    isValid = false;
+                }
+
+                isFormValid = isValid;
+                $('#submitButton').prop('disabled', !isValid);
+
+                return isValid;
+            }
+
+            // Form field change listeners
+            $('#Name, #Price, #StockQuantity, #Description').on('input', validateForm);
+            $('#CategoryId').on('change', validateForm);
+
+            // Form submission
+            $('#editForm').on('submit', function(e) {
+                if (!isFormValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields correctly before submitting.');
+                    return false;
+                }
+
+                // Clear old hidden inputs
+                $('input[name="ColorHexCodes"]').remove();
+                $('input[name="ColorNames"]').remove();
+
+                // Add fresh hidden inputs for colors
+                selectedColors.forEach(color => {
+                    const colorName = selectedColorNames[color] || getDefaultColorName(color);
+                    $('#editForm').append(`<input type="hidden" name="ColorHexCodes" value="${color}" />`);
+                    $('#editForm').append(`<input type="hidden" name="ColorNames" value="${colorName}" />`);
+                });
+
+                // Show loading
+                $('button[type="submit"]').html('<i class="fas fa-spinner fa-spin mr-2"></i>Updating...').prop('disabled', true);
+            });
+
+            // Initialize on page load
+            initializeFromModel();
+        });
+    </script>
+}

@@ -1,0 +1,707 @@
+﻿@model List<Core.DTOs.Shipping.ShippingCityDto>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Manage Shipping Cities";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    /* ========== PRIMARY COLOR VARIABLES ========== */
+    :root {
+        --primary-color: #912356;
+        --primary-hover: #7a1e48;
+        --primary-light: rgba(145, 35, 86, 0.1);
+        --primary-lighter: rgba(145, 35, 86, 0.05);
+    }
+
+    /* ========== PAGE HEADER ========== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.75rem;
+        }
+
+    .btn-create {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: beige;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+        .btn-create:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: beige;
+        }
+
+    /* ========== CARD STYLES ========== */
+    .card-custom {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        background-color: var(--primary-lighter);
+        border-bottom: 2px solid var(--primary-color);
+        padding: 1rem 1.25rem;
+    }
+
+        .card-header-custom h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 0;
+        }
+
+    /* ========== TABLE STYLES ========== */
+    .table-custom thead {
+        background-color: var(--primary-light);
+    }
+
+        .table-custom thead th {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.875rem 1rem;
+            white-space: nowrap;
+        }
+
+    .table-custom tbody td {
+        vertical-align: middle;
+        padding: 0.875rem 1rem;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: var(--primary-lighter);
+    }
+
+    /* ========== DESKTOP TABLE VIEW ========== */
+    .desktop-table-view {
+        display: block;
+    }
+
+    /* ========== MOBILE CARD VIEW ========== */
+    .mobile-card-view {
+        display: none;
+    }
+
+    .city-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+    }
+
+        .city-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary-light);
+        }
+
+    .city-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .city-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+    .city-status-badge {
+        flex-shrink: 0;
+    }
+
+    .city-card-body {
+        margin-bottom: 0.75rem;
+    }
+
+    .city-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+        .city-card-row:last-child {
+            border-bottom: none;
+        }
+
+    .city-card-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+        .city-card-label i {
+            color: var(--primary-color);
+            width: 18px;
+            text-align: center;
+        }
+
+    .city-card-value {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .city-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #eee;
+    }
+
+        .city-card-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+    /* ========== BADGES ========== */
+    .badge-active {
+        background-color: #28a745;
+        color: white;
+        padding: 0.4em 0.8em;
+        font-size: 0.8rem;
+    }
+
+    .badge-inactive {
+        background-color: #dc3545;
+        color: white;
+        padding: 0.4em 0.8em;
+        font-size: 0.8rem;
+    }
+
+    /* ========== SHIPPING COST ========== */
+    .shipping-cost {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1rem;
+    }
+
+    /* ========== ACTION BUTTONS ========== */
+    .btn-action-edit {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+        .btn-action-edit:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: beige;
+        }
+
+    .btn-action-toggle {
+        border-color: #ffc107;
+        color: #856404;
+    }
+
+        .btn-action-toggle:hover {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #333;
+        }
+
+    .btn-action-delete {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+        .btn-action-delete:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h5 {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #888;
+            margin-bottom: 1rem;
+        }
+
+    /* ========== RESPONSIVE: LARGE (992px+) ========== */
+    @@media (min-width: 992px) {
+        .desktop-table-view {
+            display: block;
+        }
+
+        .mobile-card-view {
+            display: none;
+        }
+    }
+
+    /* ========== RESPONSIVE: MEDIUM & BELOW (< 992px) ========== */
+    @@media (max-width: 991.98px) {
+        .desktop-table-view {
+            display: none;
+        }
+
+        .mobile-card-view {
+            display: block;
+        }
+    }
+
+    /* ========== RESPONSIVE: SMALL (< 768px) ========== */
+    @@media (max-width: 767.98px) {
+        .page-header h1 {
+            font-size: 1.4rem;
+        }
+
+        .city-card-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .city-card-value {
+            text-align: left;
+            width: 100%;
+        }
+
+        .city-card-actions {
+            flex-direction: column;
+        }
+
+            .city-card-actions .btn {
+                width: 100%;
+            }
+
+            .city-card-actions form {
+                width: 100%;
+            }
+
+                .city-card-actions form .btn {
+                    width: 100%;
+                }
+    }
+
+    /* ========== RESPONSIVE: EXTRA SMALL (< 576px) ========== */
+    @@media (max-width: 575.98px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+
+            .page-header h1 {
+                font-size: 1.25rem;
+                margin-bottom: 0.5rem;
+            }
+
+        .btn-create {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-text-full {
+            display: none;
+        }
+
+        .btn-text-short {
+            display: inline;
+        }
+
+        .card-custom .card-body {
+            padding: 0.75rem;
+        }
+
+        .city-card {
+            padding: 0.75rem;
+        }
+
+        .city-name {
+            font-size: 1rem;
+        }
+
+        .city-card-label {
+            font-size: 0.8rem;
+        }
+
+        .city-card-value {
+            font-size: 0.85rem;
+        }
+
+        .shipping-cost {
+            font-size: 0.95rem;
+        }
+
+        .empty-state {
+            padding: 2rem 0.5rem;
+        }
+
+            .empty-state i {
+                font-size: 2.5rem;
+            }
+
+            .empty-state h5 {
+                font-size: 1rem;
+            }
+
+            .empty-state p {
+                font-size: 0.85rem;
+            }
+    }
+
+    /* ========== BUTTON TEXT TOGGLE ========== */
+    .btn-text-short {
+        display: none;
+    }
+
+    .btn-text-full {
+        display: inline;
+    }
+
+    @@media (max-width: 575.98px) {
+        .btn-text-short {
+            display: inline;
+        }
+
+        .btn-text-full {
+            display: none;
+        }
+    }
+
+    /* ========== SUMMARY STATS ========== */
+    .stats-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        flex: 1;
+        min-width: 150px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+        color: white;
+        padding: 1rem 1.25rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+        .stat-card i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+    @@media (max-width: 575.98px) {
+        .stats-row {
+            flex-direction: column;
+        }
+
+        .stat-card {
+            min-width: 100%;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header - Responsive -->
+    <div class="page-header">
+        <h1><i class="fas fa-shipping-fast mr-2" style="color: #912356;"></i>Shipping Cities</h1>
+        <a href="@Url.Action("CreateCity", "Shipping")" class="btn btn-create">
+            <i class="fas fa-plus-circle"></i>
+            <span class="btn-text-full">Add New City</span>
+            <span class="btn-text-short">Add City</span>
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Summary Stats -->
+    @* <div class="stats-row">
+        <div class="stat-card">
+            <i class="fas fa-city d-block"></i>
+            <div class="stat-value">@Model.Count</div>
+            <div class="stat-label">Total Cities</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-check-circle d-block"></i>
+            <div class="stat-value">@Model.Count(c => c.IsActive)</div>
+            <div class="stat-label">Active Cities</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-ban d-block"></i>
+            <div class="stat-value">@Model.Count(c => !c.IsActive)</div>
+            <div class="stat-label">Inactive Cities</div>
+        </div>
+    </div> *@
+
+    <div class="card card-custom">
+        <div class="card-header card-header-custom">
+            <h5><i class="fas fa-list mr-2"></i>All Shipping Cities</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h5>No Shipping Cities Found</h5>
+                    <p>Get started by adding your first shipping city.</p>
+                    <a href="@Url.Action("CreateCity", "Shipping")" class="btn btn-create">
+                        <i class="fas fa-plus-circle mr-2"></i>Add New City
+                    </a>
+                </div>
+            }
+            else
+            {
+                <!-- Desktop Table View -->
+                <div class="desktop-table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-city mr-2"></i>City Name</th>
+                                    <th><i class="fas fa-money-bill-wave mr-2"></i>Shipping Cost</th>
+                                    <th><i class="fas fa-toggle-on mr-2"></i>Status</th>
+                                    <th><i class="fas fa-calendar-alt mr-2"></i>Created Date</th>
+                                    <th><i class="fas fa-cogs mr-2"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var city in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong style="color: var(--primary-color);">@city.CityName</strong>
+                                        </td>
+                                        <td>
+                                            <span class="shipping-cost">EGP @city.ShippingCost.ToString("N2")</span>
+                                        </td>
+                                        <td>
+                                            @if (city.IsActive)
+                                            {
+                                                <span class="badge badge-active">
+                                                    <i class="fas fa-check mr-1"></i>Active
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-inactive">
+                                                    <i class="fas fa-times mr-1"></i>Inactive
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                <i class="far fa-calendar mr-1"></i>@city.CreatedDate.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="@Url.Action("EditCity", "Shipping", new { id = city.Id })"
+                                                   class="btn btn-action-edit" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="post"
+                                                      action="@Url.Action("ToggleCityStatus", "Shipping", new { id = city.Id })"
+                                                      class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-action-toggle"
+                                                            title="@(city.IsActive ? "Deactivate" : "Activate")">
+                                                        @if (city.IsActive)
+                                                        {
+                                                            <i class="fas fa-toggle-on"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-toggle-off"></i>
+                                                        }
+                                                    </button>
+                                                </form>
+                                                <form method="post"
+                                                      action="@Url.Action("DeleteCity", "Shipping", new { id = city.Id })"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Are you sure you want to delete this city?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-action-delete" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="mobile-card-view p-3">
+                    @foreach (var city in Model)
+                    {
+                        <div class="city-card">
+                            <div class="city-card-header">
+                                <h5 class="city-name">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>@city.CityName
+                                </h5>
+                                <div class="city-status-badge">
+                                    @if (city.IsActive)
+                                    {
+                                        <span class="badge badge-active">
+                                            <i class="fas fa-check mr-1"></i>Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-inactive">
+                                            <i class="fas fa-times mr-1"></i>Inactive
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="city-card-body">
+                                <div class="city-card-row">
+                                    <span class="city-card-label">
+                                        <i class="fas fa-money-bill-wave"></i>Shipping Cost
+                                    </span>
+                                    <span class="city-card-value shipping-cost">
+                                        EGP @city.ShippingCost.ToString("N2")
+                                    </span>
+                                </div>
+                                <div class="city-card-row">
+                                    <span class="city-card-label">
+                                        <i class="fas fa-calendar-alt"></i>Created Date
+                                    </span>
+                                    <span class="city-card-value">
+                                        @city.CreatedDate.ToString("MMM dd, yyyy")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="city-card-actions">
+                                <a href="@Url.Action("EditCity", "Shipping", new { id = city.Id })"
+                                   class="btn btn-sm btn-action-edit">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Edit</span>
+                                </a>
+                                <form method="post"
+                                      action="@Url.Action("ToggleCityStatus", "Shipping", new { id = city.Id })"
+                                      class="d-inline flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-action-toggle w-100">
+                                        @if (city.IsActive)
+                                        {
+                                            <i class="fas fa-toggle-on"></i>
+                                            <span>Deactivate</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-toggle-off"></i>
+                                            <span>Activate</span>
+                                        }
+                                    </button>
+                                </form>
+                                <form method="post"
+                                      action="@Url.Action("DeleteCity", "Shipping", new { id = city.Id })"
+                                      class="d-inline flex-fill"
+                                      onsubmit="return confirm('Are you sure you want to delete this city?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-action-delete w-100">
+                                        <i class="fas fa-trash"></i>
+                                        <span>Delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+
+            // Initialize tooltips
+            $('[title]').tooltip({
+                placement: 'top',
+                trigger: 'hover'
+            });
+        });
+    </script>
+}

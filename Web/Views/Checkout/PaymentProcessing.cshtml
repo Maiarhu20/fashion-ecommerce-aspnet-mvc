@@ -1,0 +1,320 @@
+﻿@model Core.DTOs.Checkout.PaymentProcessingViewModel
+@{
+    ViewData["Title"] = "Payment Processing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .payment-container {
+        padding: 20px 0;
+        min-height: 80vh;
+    }
+
+    .payment-card {
+        border-radius: 16px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+        border: none;
+        overflow: hidden;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        padding: 25px 20px;
+    }
+
+    .order-summary-box {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 2px solid #2196f3;
+    }
+
+    .iframe-container {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background: #fff;
+    }
+
+    #paymobIframe {
+        width: 100%;
+        height: 650px;
+        border: none;
+    }
+
+    .help-section {
+        background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid #2196f3;
+    }
+
+    .btn-wallet {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        border: none;
+        padding: 15px 30px;
+        font-weight: 600;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        transition: all 0.3s ease;
+    }
+
+        .btn-wallet:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+    @@media (max-width: 768px) {
+        .payment-container
+
+    {
+        padding: 15px 0;
+    }
+
+    .payment-header {
+        padding: 20px 15px;
+    }
+
+        .payment-header h4 {
+            font-size: 1.2rem;
+        }
+
+    .order-summary-box {
+        padding: 15px;
+    }
+
+    #paymobIframe {
+        height: 550px;
+    }
+
+    .help-section {
+        padding: 15px;
+    }
+
+        .help-section ul {
+            font-size: 0.9rem;
+            padding-left: 20px;
+        }
+
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
+
+        .d-flex.gap-2 .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+    }
+
+    @@media (max-width: 576px) {
+        .payment-header h4
+
+    {
+        font-size: 1.1rem;
+    }
+
+    .order-summary-box h5 {
+        font-size: 1.1rem;
+    }
+
+    #paymobIframe {
+        height: 500px;
+    }
+
+    }
+</style>
+
+<div class="container payment-container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-9">
+            <div class="card payment-card">
+                <div class="payment-header">
+                    <h4 class="mb-0 text-white">
+                        <i class="bi bi-credit-card me-2"></i>
+                        Complete Your Payment
+                    </h4>
+                </div>
+
+                <div class="card-body p-3 p-md-4">
+                    <div class="order-summary-box text-center">
+                        <h5 class="mb-2">Order #@Model.OrderNumber</h5>
+                        <p class="mb-0">
+                            <span class="text-muted">Total Amount:</span>
+                            <strong class="d-block fs-4 text-primary mt-1">EGP @Model.GrandTotal.ToString("N2")</strong>
+                        </p>
+                    </div>
+
+                    <div id="paymentStatus" class="mb-3">
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Loading payment form...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.IsWalletPayment && !string.IsNullOrEmpty(Model.WalletRedirectUrl))
+                    {
+                        <div class="text-center">
+                            <div class="alert alert-info">
+                                <i class="bi bi-phone me-2"></i>
+                                You will be redirected to complete your wallet payment.
+                            </div>
+                            <a href="@Model.WalletRedirectUrl" class="btn btn-wallet btn-lg">
+                                <i class="bi bi-wallet2 me-2"></i>Continue to Wallet Payment
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="paymobIframeContainer" class="mb-4">
+                            <div class="iframe-container">
+                                <iframe id="paymobIframe" allow="payment"></iframe>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="help-section mt-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Payment Information
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li class="mb-2">Your payment is processed securely by Paymob</li>
+                            <li class="mb-2">Accepted cards: Visa, Mastercard, Meeza</li>
+                            <li class="mb-2">For 3D Secure cards, you may be asked to verify with your bank</li>
+                            <li>Do not close this page until payment is complete</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-3">Having trouble?</p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="@Url.Action("Index", "Checkout")" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Return to Checkout
+                            </a>
+                            <button onclick="retryPayment()" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Reload Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const paymentKey = '@Html.Raw(Model.PaymentKey)';
+        const iframeId = '@Model.IframeId';
+        const orderNumber = '@Model.OrderNumber';
+        const isWalletPayment = @Model.IsWalletPayment.ToString().ToLower();
+        let verificationInterval = null;
+
+        function loadPaymobIframe() {
+            if (isWalletPayment) {
+                document.getElementById('paymentStatus').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="bi bi-phone me-2"></i>
+                        Please click the button below to complete your wallet payment.
+                    </div>`;
+                return;
+            }
+
+            if (!paymentKey || !iframeId) {
+                document.getElementById('paymentStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Unable to load payment form. Please try again.
+                    </div>`;
+                return;
+            }
+
+            const iframeUrl = `https://accept.paymobsolutions.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
+            const iframe = document.getElementById('paymobIframe');
+
+            iframe.src = iframeUrl;
+
+            iframe.onload = function() {
+                document.getElementById('paymentStatus').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Please complete your payment details below.
+                    </div>`;
+                startPaymentVerification();
+            };
+
+            iframe.onerror = function() {
+                document.getElementById('paymentStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load payment form. Please try again.
+                    </div>`;
+            };
+        }
+
+        function startPaymentVerification() {
+            verificationInterval = setInterval(async function() {
+                try {
+                    const response = await fetch('@Url.Action("CheckPaymentStatus", "Checkout")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ orderNumber: orderNumber })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        clearInterval(verificationInterval);
+                        document.getElementById('paymentStatus').innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Payment successful! Redirecting...
+                            </div>`;
+                        window.location.href = result.redirectUrl;
+                    }
+                } catch (error) {
+                    console.error('Verification error:', error);
+                }
+            }, 3000);
+
+            setTimeout(function() {
+                if (verificationInterval) {
+                    clearInterval(verificationInterval);
+                    document.getElementById('paymentStatus').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-clock me-2"></i>
+                            Verification timed out. If you completed the payment, check your email.
+                        </div>`;
+                }
+            }, 600000);
+        }
+
+        function retryPayment() {
+            if (verificationInterval) clearInterval(verificationInterval);
+            document.getElementById('paymentStatus').innerHTML = `
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-3"></div>
+                        <span>Reloading payment form...</span>
+                    </div>
+                </div>`;
+            document.getElementById('paymobIframe').src = '';
+            setTimeout(loadPaymobIframe, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadPaymobIframe);
+        window.addEventListener('beforeunload', () => {
+            if (verificationInterval) clearInterval(verificationInterval);
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}

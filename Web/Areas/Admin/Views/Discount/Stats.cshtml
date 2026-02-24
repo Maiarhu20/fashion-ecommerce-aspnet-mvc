@@ -1,0 +1,128 @@
+﻿@model Core.DTOs.Discount.DiscountStatsDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Discount Statistics";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Discount Statistics</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase">Total Discounts</h6>
+                            <h2 class="mb-0">@Model.TotalDiscounts</h2>
+                        </div>
+                        <i class="fas fa-tags fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase">Active Discounts</h6>
+                            <h2 class="mb-0">@Model.ActiveDiscounts</h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase">Expired Discounts</h6>
+                            <h2 class="mb-0">@Model.ExpiredDiscounts</h2>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase">Unused Discounts</h6>
+                            <h2 class="mb-0">@Model.UnusedDiscounts</h2>
+                        </div>
+                        <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Usage Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <h1 class="display-4">@Model.TotalUsageCount</h1>
+                        <p class="text-muted">Total Times Used</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Most Popular Discount</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <h3 class="mb-3">@Model.MostUsedDiscount</h3>
+                        <p class="text-muted">Most Frequently Used Code</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <a asp-action="Create" class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-2"></i>Create New Discount
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-list me-2"></i>View All Discounts
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="/admin" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-home me-2"></i>Admin Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

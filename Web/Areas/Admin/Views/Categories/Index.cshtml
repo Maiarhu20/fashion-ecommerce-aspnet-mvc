@@ -1,0 +1,587 @@
+﻿@model IEnumerable<Core.DTOs.Categories.CategoryListDto>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Categories Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    var isActiveCategoriesActive = currentAction == "Index" || currentAction == null;
+    var isDeletedCategoriesActive = currentAction == "Deleted";
+}
+
+<style>
+    /* Mobile Responsive Styles */
+
+    /* Header section */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .page-header h1 {
+            margin: 0;
+        }
+
+    /* Card header with tabs */
+    .card-header-responsive {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .tab-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Mobile card view for table data */
+    .mobile-card-view {
+        display: none;
+    }
+
+    .category-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #fff;
+    }
+
+    .category-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .category-card-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .category-card-placeholder {
+        width: 60px;
+        height: 60px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .category-card-title {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .category-card-body {
+        margin-bottom: 0.75rem;
+    }
+
+    .category-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .category-card-row:last-child {
+            border-bottom: none;
+        }
+
+    .category-card-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+        margin-right: 1rem;
+    }
+
+    .category-card-value {
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .category-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #eee;
+    }
+
+        .category-card-actions .btn {
+            flex: 1;
+            min-width: 70px;
+        }
+
+    /* Desktop table view */
+    .desktop-table-view {
+        display: block;
+    }
+
+    /* Responsive breakpoints - NOTE: Use @@  in Razor */
+    @@media (max-width: 991.98px) {
+        .desktop-table-view {
+            display: none;
+        }
+        
+        .mobile-card-view {
+            display: block;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+        .card-header-responsive {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+            .card-header-responsive h6 {
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+        .tab-buttons {
+            justify-content: center;
+            width: 100%;
+        }
+
+            .tab-buttons .btn {
+                flex: 1;
+                text-align: center;
+                font-size: 0.8rem;
+                padding: 0.5rem;
+            }
+
+        .category-card-actions {
+            flex-direction: column;
+        }
+
+            .category-card-actions .btn {
+                width: 100%;
+            }
+
+            .category-card-actions .btn-group {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+                .category-card-actions .btn-group .btn {
+                    border-radius: 4px !important;
+                    margin-bottom: 0.25rem;
+                }
+
+        .empty-state-btn {
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .category-card-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .category-card-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .category-card-value {
+            text-align: left;
+            margin-top: 0.25rem;
+        }
+    }
+
+    /* Action buttons styling */
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn i {
+        font-size: 0.875rem;
+    }
+
+    /* Show text labels on mobile for better UX */
+    .btn-label {
+        display: none;
+    }
+
+    @@media (max-width: 991.98px) {
+        .btn-label {
+            display: inline;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="h3 text-dark">Categories Management</h1>
+        <a asp-action="Create" class="btn btn-primary d-flex align-items-center"
+           style="background-color: #912356; border-color: #912356; color:beige">
+            <i class="fas fa-plus-circle mr-2"></i>
+            <span>Create New Category</span>
+        </a>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Navigation Tabs and Category List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 card-header-responsive">
+            <h6 class="m-0 font-weight-bold text-dark">Categories</h6>
+            <div class="tab-buttons">
+                <a asp-action="Index" class="btn btn-sm @(isActiveCategoriesActive ? "btn-tab-active" : "btn-tab-inactive")">
+                    <i class="fas fa-check-circle d-sm-none mr-1"></i>
+                    Active
+                    <span class="d-none d-sm-inline">Categories</span>
+                </a>
+                <a asp-action="Deleted" class="btn btn-sm @(isDeletedCategoriesActive ? "btn-tab-active" : "btn-tab-inactive")">
+                    <i class="fas fa-trash d-sm-none mr-1"></i>
+                    Deleted
+                    <span class="d-none d-sm-inline">Categories</span>
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-dark mb-3"></i>
+                    <h5 class="text-dark">No categories found</h5>
+                    <p class="text-dark">Get started by creating your first category.</p>
+                    <a asp-action="Create" class="btn btn-primary empty-state-btn"
+                       style="background-color: #912356; border-color: #912356; color:beige">
+                        <i class="fas fa-plus-circle mr-2"></i>Create Category
+                    </a>
+                </div>
+            }
+            else
+            {
+                <!-- Desktop Table View -->
+                <div class="desktop-table-view">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead class="table-custom-thead">
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                    <th>Products</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="text-center">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@item.ImageUrl" alt="@item.Name" class="img-thumbnail"
+                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                     style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-image text-dark"></i>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td class="font-weight-bold">@item.Name</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                <span title="@item.Description">
+                                                    @(item.Description.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No description</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-theme-info badge-pill">@item.ProductCount</span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.ProductCount > 0)
+                                            {
+                                                <span class="badge badge-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-theme-warning">No Products</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a asp-action="Edit" asp-route-id="@item.Id"
+                                                   class="btn btn-outline-theme-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a asp-action="Details" asp-route-id="@item.Id"
+                                                   class="btn btn-outline-theme-primary" title="Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                @if (item.ProductCount == 0)
+                                                {
+                                                    <form asp-action="Delete" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <button type="submit" class="btn btn-outline-danger" title="Delete"
+                                                                onclick="return confirm('Are you sure you want to delete this category?')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                            onclick="checkDelete(@item.Id, '@item.Name')" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <form asp-action="Archive" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <button type="submit" class="btn btn-outline-theme-dark" title="Archive"
+                                                                onclick="return confirm('Archive this category? Products will be hidden but order history preserved.')">
+                                                            <i class="fas fa-archive"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="mobile-card-view">
+                    @foreach (var item in Model)
+                    {
+                        <div class="category-card">
+                            <div class="category-card-header">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.Name" class="category-card-image">
+                                }
+                                else
+                                {
+                                    <div class="category-card-placeholder">
+                                        <i class="fas fa-image text-dark"></i>
+                                    </div>
+                                }
+                                <h5 class="category-card-title">@item.Name</h5>
+                            </div>
+
+                            <div class="category-card-body">
+                                <div class="category-card-row">
+                                    <span class="category-card-label">Description:</span>
+                                    <span class="category-card-value">
+                                        @if (!string.IsNullOrEmpty(item.Description))
+                                        {
+                                            @(item.Description.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No description</span>
+                                        }
+                                    </span>
+                                </div>
+                                <div class="category-card-row">
+                                    <span class="category-card-label">Products:</span>
+                                    <span class="category-card-value">
+                                        <span class="badge badge-theme-info badge-pill">@item.ProductCount</span>
+                                    </span>
+                                </div>
+                                <div class="category-card-row">
+                                    <span class="category-card-label">Status:</span>
+                                    <span class="category-card-value">
+                                        @if (item.ProductCount > 0)
+                                        {
+                                            <span class="badge badge-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-theme-warning">No Products</span>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="category-card-actions">
+                                <a asp-action="Edit" asp-route-id="@item.Id"
+                                   class="btn btn-outline-theme-primary btn-sm action-btn">
+                                    <i class="fas fa-edit"></i>
+                                    <span class="btn-label">Edit</span>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id"
+                                   class="btn btn-outline-theme-primary btn-sm action-btn">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="btn-label">Details</span>
+                                </a>
+                                @if (item.ProductCount == 0)
+                                {
+                                    <form asp-action="Delete" method="post" class="d-inline flex-fill">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm action-btn w-100"
+                                                onclick="return confirm('Are you sure you want to delete this category?')">
+                                            <i class="fas fa-trash"></i>
+                                            <span class="btn-label">Delete</span>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-outline-danger btn-sm action-btn"
+                                            onclick="checkDelete(@item.Id, '@item.Name')">
+                                        <i class="fas fa-trash"></i>
+                                        <span class="btn-label">Delete</span>
+                                    </button>
+                                    <form asp-action="Archive" method="post" class="d-inline flex-fill">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-theme-dark btn-sm action-btn w-100"
+                                                onclick="return confirm('Archive this category? Products will be hidden but order history preserved.')">
+                                            <i class="fas fa-archive"></i>
+                                            <span class="btn-label">Archive</span>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function checkDelete(categoryId, categoryName) {
+            showLoading('Checking category dependencies...');
+
+            fetch(`@Url.Action("CheckDelete")/${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+
+                    if (data.success) {
+                        if (data.canDelete) {
+                            if (confirm(`Are you sure you want to delete "${categoryName}"?`)) {
+                                submitDelete(categoryId);
+                            }
+                        } else {
+                            let message = `Cannot delete "${categoryName}"\n\n`;
+                            message += `Reason: ${data.message}\n`;
+                            if (data.blockingReasons && data.blockingReasons.length > 0) {
+                                message += '\nBlocking Reasons:\n';
+                                data.blockingReasons.forEach(reason => {
+                                    message += `• ${reason}\n`;
+                                });
+                            }
+                            message += '\nConsider archiving instead to preserve order history.';
+                            alert(message);
+                        }
+                    } else {
+                        alert('Error checking deletion eligibility: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    alert('Error checking deletion eligibility');
+                    console.error('Error:', error);
+                });
+        }
+
+        function submitDelete(categoryId) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Delete")';
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = categoryId;
+            form.appendChild(idInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function showLoading(message) {
+            console.log('Loading: ' + message);
+        }
+
+        function hideLoading() {
+            console.log('Loading complete');
+        }
+    </script>
+}

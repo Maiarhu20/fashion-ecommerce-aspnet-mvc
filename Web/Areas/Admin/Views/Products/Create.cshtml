@@ -1,0 +1,960 @@
+﻿@model Core.DTOs.Products.ProductCreateDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Create Product";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Create New Product</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product Details</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data" id="createForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Name" class="control-label font-weight-bold">Product Name *</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter product name" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="CategoryId" class="control-label font-weight-bold">Category *</label>
+                                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+                                        <option value="">-- Select Category --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Price" class="control-label font-weight-bold">Price *</label>
+                                    <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" placeholder="0.00" />
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="DiscountPercent" class="control-label font-weight-bold">Discount Percent</label>
+                                    <input asp-for="DiscountPercent" class="form-control" type="number" step="0.01" min="0" max="100" placeholder="0" />
+                                    <span asp-validation-for="DiscountPercent" class="text-danger"></span>
+                                    <small class="form-text text-muted">Enter discount percentage (0-100). Leave empty for no discount.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="StockQuantity" class="control-label font-weight-bold">Stock Quantity *</label>
+                                    <input asp-for="StockQuantity" class="form-control" type="number" min="0" placeholder="0" />
+                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                </div>
+
+                                <!-- Multiple Image Upload -->
+                                <div class="form-group">
+                                    <label class="control-label font-weight-bold">Product Images *</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="imageFiles" name="ImageFiles" multiple accept="image/*">
+                                        <label class="custom-file-label" for="imageFiles">Choose product images (multiple)</label>
+                                    </div>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="ImageFiles" data-valmsg-replace="true"></span>
+                                    @* <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP. Max 10 images, 5MB each.</small> *@
+                                    <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP. 5MB max per image.</small>
+
+                                    <!-- Image Preview -->
+                                    <div id="imagePreview" class="mt-3 row"></div>
+                                    <div id="imageError" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <!-- Color Palette -->
+                                <div class="form-group">
+                                    <label class="control-label font-weight-bold">Colors *</label>
+                                    <div class="color-palette mb-3">
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            <!-- Common Colors - Fixed: Added proper styling -->
+                                            <div class="color-option" data-color="#FF0000" title="Red" style="background-color: #FF0000;"></div>
+                                            <div class="color-option" data-color="#00FF00" title="Green" style="background-color: #00FF00;"></div>
+                                            <div class="color-option" data-color="#0000FF" title="Blue" style="background-color: #0000FF;"></div>
+                                            <div class="color-option" data-color="#FFFF00" title="Yellow" style="background-color: #FFFF00;"></div>
+                                            <div class="color-option" data-color="#FF00FF" title="Magenta" style="background-color: #FF00FF;"></div>
+                                            <div class="color-option" data-color="#00FFFF" title="Cyan" style="background-color: #00FFFF;"></div>
+                                            <div class="color-option" data-color="#000000" title="Black" style="background-color: #000000;"></div>
+                                            <div class="color-option" data-color="#FFFFFF" title="White" style="background-color: #FFFFFF; border: 2px solid #ccc;"></div>
+                                            <div class="color-option" data-color="#808080" title="Gray" style="background-color: #808080;"></div>
+                                            <div class="color-option" data-color="#FFA500" title="Orange" style="background-color: #FFA500;"></div>
+                                            <div class="color-option" data-color="#800080" title="Purple" style="background-color: #800080;"></div>
+                                            <div class="color-option" data-color="#FFC0CB" title="Pink" style="background-color: #FFC0CB;"></div>
+                                            <div class="color-option" data-color="#A52A2A" title="Brown" style="background-color: #A52A2A;"></div>
+                                            <div class="color-option" data-color="#008000" title="Dark Green" style="background-color: #008000;"></div>
+                                            <div class="color-option" data-color="#000080" title="Navy" style="background-color: #000080;"></div>
+                                        </div>
+
+                                        <!-- Custom Color Picker -->
+                                        <div class="input-group">
+                                            <input type="color" id="customColor" class="form-control" style="height: 38px; padding: 2px;" value="#FF0000">
+                                            <div class="input-group-append">
+                                                <button type="button" id="activateBrush" class="btn btn-dark" title="Pick color from screen">
+                                                    <i class="fas fa-eye-dropper"></i>
+                                                </button>
+                                                <button type="button" id="addCustomColor" class="btn btn-outline-primary">
+                                                    <i class="fas fa-plus"></i> Add Custom
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted" id="brushSupportHint">Tip: Tap the brush, then tap any element on the page to grab its color.</small>
+                                    </div>
+
+                                    <!-- Selected Colors -->
+                                    <div id="selectedColors" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                    <div id="colorError" class="text-danger small mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Names Input Section -->
+                        <div class="form-group mt-3" id="colorNamesContainer" style="display: none;">
+                            <label class="control-label font-weight-bold">Color Names *</label>
+                            <div id="colorNameInputs">
+                                <!-- Dynamic color name inputs will be added here -->
+                            </div>
+                            <small class="form-text text-muted">Enter display names for each selected color.</small>
+                            <div id="colorNameError" class="text-danger small mt-1"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label font-weight-bold">Description *</label> <!-- Added * -->
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter product description" required></textarea> <!-- Added required -->
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" style="background-color: #912356; border-color: #912356;" id="submitButton" disabled>
+                                <i class="fas fa-save mr-2"></i>Create Product
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .color-option {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+            .color-option:hover {
+                transform: scale(1.15);
+                border-color: #007bff;
+            }
+
+            .color-option.selected {
+                border-color: #28a745;
+                transform: scale(1.15);
+                box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
+            }
+
+        .selected-color-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 6px 12px;
+            margin: 4px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+            .selected-color-chip .color-preview {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                margin-right: 8px;
+                border: 1px solid #ccc;
+            }
+
+        .image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        #activateBrush {
+            border-left: none;
+            border-right: none;
+        }
+
+        .image-preview {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+            cursor: crosshair;
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+
+        .image-preview:active {
+            transform: scale(0.95);
+            border-color: #912356;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .color-input-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-right: 5px;
+        }
+
+        .color-name-input {
+            border-left: none !important;
+        }
+
+        .input-group-prepend .input-group-text {
+            background-color: #f8f9fa;
+            border-right: none;
+        }
+
+        #submitButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Animation for notification */
+        @@keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Mobile improvements */
+        @@media (max-width: 768px) {
+            .image-preview {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .color-option {
+                width: 40px;
+                height: 40px;
+                margin: 2px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            let selectedColors = [];
+            let selectedColorNames = {};
+            let imageFiles = [];
+            let isFormValid = false;
+            let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Initialize form validation on page load
+            validateForm();
+
+            // ==================== IMPROVED BRUSH/COLOR PICKER ====================
+            
+            // Check EyeDropper support
+            const hasEyeDropper = 'EyeDropper' in window;
+            
+            if (!hasEyeDropper) {
+                $('#brushSupportHint').html(
+                    '<span class="text-info"><i class="fas fa-info-circle"></i> Tap any image or element to pick its color.</span>'
+                );
+                $('#activateBrush').html('<i class="fas fa-hand-pointer"></i>').attr('title', 'Pick color from page');
+            }
+
+            // Enhanced brush button click handler
+            $('#activateBrush').on('click', async function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const originalContent = btn.html();
+                
+                if (hasEyeDropper) {
+                    // Use native EyeDropper API (Chrome/Edge)
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').addClass('btn-warning');
+                    
+                    try {
+                        const eyeDropper = new EyeDropper();
+                        const result = await eyeDropper.open();
+                        
+                        const pickedColor = result.sRGBHex.toUpperCase();
+                        $('#customColor').val(pickedColor);
+                        
+                        // Visual feedback
+                        $('#customColor').fadeOut(100).fadeIn(100);
+                        showColorPickedNotification(pickedColor);
+                    } catch (error) {
+                        console.log("User cancelled color picker");
+                    } finally {
+                        btn.html(originalContent).removeClass('btn-warning');
+                    }
+                } else {
+                    // Fallback: Enable universal element picking
+                    activateUniversalColorPicker(btn, originalContent);
+                }
+            });
+
+            // ==================== UNIVERSAL COLOR PICKER (Fallback) ====================
+            let isPickingColor = false;
+            let pickerOverlay = null;
+
+            function activateUniversalColorPicker(btn, originalContent) {
+                if (isPickingColor) {
+                    deactivateUniversalColorPicker(btn, originalContent);
+                    return;
+                }
+
+                isPickingColor = true;
+                btn.html('<i class="fas fa-times"></i> Cancel').addClass('btn-danger');
+                
+                // Create overlay with cursor feedback
+                pickerOverlay = $('<div>').css({
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 9999,
+                    cursor: 'crosshair',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                });
+
+                // Add visual indicator
+                const indicator = $('<div>').css({
+                    position: 'fixed',
+                    top: '10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    padding: '10px 20px',
+                    backgroundColor: 'rgba(145, 35, 86, 0.95)',
+                    color: 'white',
+                    borderRadius: '5px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                    zIndex: 10000
+                }).html('<i class="fas fa-eye-dropper"></i> Tap any element to pick its color');
+
+                $('body').append(pickerOverlay).append(indicator);
+
+                // Universal click/touch handler
+                pickerOverlay.on('click touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Get the element under the click/touch
+                    const touch = e.type === 'touchend' ? e.originalEvent.changedTouches[0] : e;
+                    const x = touch.clientX;
+                    const y = touch.clientY;
+                    
+                    // Temporarily hide overlay to get element underneath
+                    pickerOverlay.hide();
+                    indicator.hide();
+                    const elementBelow = document.elementFromPoint(x, y);
+                    pickerOverlay.show();
+                    indicator.show();
+                    
+                    if (elementBelow) {
+                        const color = getColorFromElement(elementBelow, x, y);
+                        if (color) {
+                            $('#customColor').val(color);
+                            showColorPickedNotification(color);
+                            deactivateUniversalColorPicker(btn, originalContent);
+                        }
+                    }
+                });
+
+                indicator.on('click touchend', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            function deactivateUniversalColorPicker(btn, originalContent) {
+                isPickingColor = false;
+                btn.html(originalContent).removeClass('btn-danger');
+                if (pickerOverlay) {
+                    pickerOverlay.remove();
+                    $('div[style*="position: fixed"][style*="z-index: 10000"]').remove();
+                    pickerOverlay = null;
+                }
+            }
+
+            // ==================== COLOR EXTRACTION FROM ELEMENTS ====================
+            function getColorFromElement(element, x, y) {
+                try {
+                    // Try to get color from images first
+                    if (element.tagName === 'IMG') {
+                        return getColorFromImage(element, x, y);
+                    }
+                    
+                    // Try background image
+                    const bgImage = window.getComputedStyle(element).backgroundImage;
+                    if (bgImage && bgImage !== 'none') {
+                        // Create temporary image to extract color
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        const url = bgImage.slice(5, -2); // Remove url(" and ")
+                        img.src = url;
+                        return getColorFromImage(img, x, y);
+                    }
+                    
+                    // Fall back to background color
+                    const bgColor = window.getComputedStyle(element).backgroundColor;
+                    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                        return rgbToHex(bgColor);
+                    }
+                    
+                    // Try parent elements
+                    if (element.parentElement) {
+                        return getColorFromElement(element.parentElement, x, y);
+                    }
+                } catch (error) {
+                    console.error('Error extracting color:', error);
+                }
+                return null;
+            }
+
+            // ==================== IMPROVED IMAGE COLOR PICKING ====================
+            function getColorFromImage(img, clientX, clientY) {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Calculate precise coordinates
+                    const rect = img.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    
+                    const x = Math.floor((clientX - rect.left) * scaleX);
+                    const y = Math.floor((clientY - rect.top) * scaleY);
+                    
+                    // Ensure coordinates are within bounds
+                    const boundedX = Math.max(0, Math.min(x, canvas.width - 1));
+                    const boundedY = Math.max(0, Math.min(y, canvas.height - 1));
+                    
+                    const pixel = ctx.getImageData(boundedX, boundedY, 1, 1).data;
+                    const hex = rgbToHex(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
+                    
+                    return hex;
+                } catch (error) {
+                    console.error('Error picking color from image:', error);
+                    return null;
+                }
+            }
+
+            // Image preview click/touch handler with improved mobile support
+            $(document).on('click touchend', '.image-preview', function(e) {
+                e.preventDefault();
+                const touch = e.type === 'touchend' ? e.originalEvent.changedTouches[0] : e;
+                
+                const color = getColorFromImage(e.target, touch.clientX, touch.clientY);
+                if (color) {
+                    $('#customColor').val(color);
+                    showColorPickedNotification(color);
+                }
+            });
+
+            // ==================== HELPER FUNCTIONS ====================
+            function rgbToHex(rgb) {
+                const result = rgb.match(/\d+/g);
+                if (!result || result.length < 3) return '#000000';
+                
+                const r = parseInt(result[0]);
+                const g = parseInt(result[1]);
+                const b = parseInt(result[2]);
+                
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+            }
+
+            function showColorPickedNotification(color) {
+                const notification = $(`
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        background: white;
+                        border: 2px solid ${color};
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        z-index: 10001;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        font-weight: bold;
+                        animation: slideIn 0.3s ease;
+                    ">
+                        <div style="
+                            width: 30px;
+                            height: 30px;
+                            background: ${color};
+                            border: 1px solid #ccc;
+                            border-radius: 4px;
+                        "></div>
+                        <span>Color Picked: ${color}</span>
+                    </div>
+                `);
+                
+                $('body').append(notification);
+                setTimeout(() => notification.fadeOut(300, () => notification.remove()), 2000);
+            }
+
+            // ==================== REST OF YOUR EXISTING CODE ====================
+            // (Keep all your existing code for file upload, color selection, form validation, etc.)
+            
+            // File input label for multiple files
+            // $('#imageFiles').on('change', function() {
+            //     const files = $(this)[0].files;
+            //     const fileNames = Array.from(files).map(file => file.name).join(', ');
+            //     $(this).next('.custom-file-label').html(fileNames || 'Choose product images (multiple)');
+
+            //     imageFiles = Array.from(files);
+            //     previewImages(files);
+            //     validateForm();
+            // });
+            $('#imageFiles').on('change', function() {
+            const files = $(this)[0].files;
+            const fileCount = files.length;
+            const labelText = fileCount === 0 ? 'Choose product images (multiple)'
+                            : fileCount === 1 ? files[0].name
+                            : `${fileCount} images selected`;
+            $(this).next('.custom-file-label').html(labelText);
+
+            imageFiles = Array.from(files);
+            previewImages(files);
+            validateForm();
+        });
+
+            // Image preview functionality
+            function previewImages(files) {
+                $('#imagePreview').empty();
+                $('#imageError').text('');
+
+                if (files.length === 0) {
+                    return;
+                }
+
+                Array.from(files).forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            $('#imageError').append(`File "${file.name}" is too large (max 5MB).<br>`);
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = $(`
+                                <div class="image-preview-container">
+                                    <img src="${e.target.result}" class="image-preview" alt="Preview ${index + 1}">
+                                    <button type="button" class="remove-image" data-index="${index}">×</button>
+                                </div>
+                            `);
+                            $('#imagePreview').append(preview);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $('#imageError').append(`File "${file.name}" is not a valid image.<br>`);
+                    }
+                });
+            }
+
+            // Remove image preview and file
+            $(document).on('click', '.remove-image', function() {
+                const index = $(this).data('index');
+                $(this).closest('.image-preview-container').remove();
+
+                imageFiles.splice(index, 1);
+                updateFileInput();
+                validateForm();
+            });
+
+            // function updateFileInput() {
+            //     const dataTransfer = new DataTransfer();
+            //     imageFiles.forEach(file => dataTransfer.items.add(file));
+
+            //     const fileInput = $('#imageFiles')[0];
+            //     fileInput.files = dataTransfer.files;
+
+            //     const fileNames = imageFiles.map(file => file.name).join(', ');
+            //     $(fileInput).next('.custom-file-label').html(fileNames || 'Choose product images (multiple)');
+            // }
+            function updateFileInput() {
+                const dataTransfer = new DataTransfer();
+                imageFiles.forEach(file => dataTransfer.items.add(file));
+
+                const fileInput = $('#imageFiles')[0];
+                fileInput.files = dataTransfer.files;
+
+                const fileCount = imageFiles.length;
+                const labelText = fileCount === 0 ? 'Choose product images (multiple)'
+                                : fileCount === 1 ? imageFiles[0].name
+                                : `${fileCount} images selected`;
+                $(fileInput).next('.custom-file-label').html(labelText);
+            }
+
+            // Color palette functionality
+            $('.color-option').click(function() {
+                const color = $(this).data('color');
+                toggleColorSelection(color, $(this));
+            });
+
+            $('#addCustomColor').click(function(e) {
+                e.preventDefault();
+                const customColor = $('#customColor').val().toUpperCase();
+
+                if (!customColor || customColor === '#000000') {
+                    alert('Please select a valid color.');
+                    return;
+                }
+
+                const formattedColor = customColor.startsWith('#') ? customColor : '#' + customColor;
+
+                if (!selectedColors.includes(formattedColor)) {
+                    // if (selectedColors.length < 10) {
+                        selectedColors.push(formattedColor);
+                        addSelectedColor(formattedColor);
+
+                        const existingColorOption = $(`.color-option[data-color="${formattedColor}"]`);
+                        if (existingColorOption.length > 0) {
+                            existingColorOption.addClass('selected');
+                        }
+
+                        addColorNameInput(formattedColor);
+                        validateForm();
+                        updateColorInputs();
+                    // } else {
+                    //     alert('Maximum 10 colors allowed per product.');
+                    // }
+                }
+            });
+
+            function toggleColorSelection(color, element) {
+                if (selectedColors.includes(color)) {
+                    removeColor(color);
+                } else {
+                    // if (selectedColors.length < 10) {
+                        selectedColors.push(color);
+                        element.addClass('selected');
+                        addSelectedColor(color);
+                        addColorNameInput(color);
+                        validateForm();
+                        updateColorInputs();
+                    // } else {
+                    //     alert('Maximum 10 colors allowed per product.');
+                    // }
+                }
+            }
+
+            function addSelectedColor(color) {
+                if ($(`#colorChip-${color.replace('#', '')}`).length === 0) {
+                    const defaultColorName = getDefaultColorName(color);
+                    const colorChip = $(`
+                        <div class="selected-color-chip" id="colorChip-${color.replace('#', '')}">
+                            <div class="color-preview" style="background-color: ${color};"></div>
+                            <span>${defaultColorName} (${color})</span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ml-1" onclick="removeColorFromChip('${color}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `);
+                    $('#selectedColors').append(colorChip);
+                    selectedColorNames[color] = defaultColorName;
+                }
+            }
+
+            function addColorNameInput(color) {
+                $('#colorNamesContainer').show();
+
+                const colorId = color.replace('#', '');
+                const defaultName = selectedColorNames[color] || getDefaultColorName(color);
+
+                if ($(`#colorName-${colorId}`).length === 0) {
+                    const colorNameInput = $(`
+                        <div class="input-group mb-2" id="colorNameGroup-${colorId}">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <div class="color-input-preview" style="background-color: ${color}; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #ccc;"></div>
+                                </span>
+                                <span class="input-group-text" style="border-left: none;">${color}</span>
+                            </div>
+                            <input type="text"
+                                   class="form-control color-name-input"
+                                   id="colorName-${colorId}"
+                                   data-color="${color}"
+                                   placeholder="Enter color name (e.g., Midnight Black)"
+                                   value="${defaultName}"
+                                   maxlength="50">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" onclick="removeColorNameInput('${color}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    $('#colorNameInputs').append(colorNameInput);
+                    selectedColorNames[color] = defaultName;
+
+                    $(`#colorName-${colorId}`).on('input', function() {
+                        const color = $(this).data('color');
+                        selectedColorNames[color] = $(this).val().trim();
+                        updateColorNameOnChip(color, $(this).val());
+                        validateForm();
+                    });
+                }
+            }
+
+            function removeColorNameInput(color) {
+                const colorId = color.replace('#', '');
+                $(`#colorNameGroup-${colorId}`).remove();
+                delete selectedColorNames[color];
+
+                if (selectedColors.length === 0) {
+                    $('#colorNamesContainer').hide();
+                }
+
+                removeColor(color);
+            }
+
+            function updateColorNameOnChip(color, name) {
+                const colorId = color.replace('#', '');
+                const chip = $(`#colorChip-${colorId}`);
+                if (chip.length) {
+                    chip.find('span').html(`${name} (${color})`);
+                }
+            }
+
+            function getDefaultColorName(hexCode) {
+                const colorMap = {
+                    "#FF0000": "Red", "#00FF00": "Green", "#0000FF": "Blue",
+                    "#FFFF00": "Yellow", "#FF00FF": "Magenta", "#00FFFF": "Cyan",
+                    "#000000": "Black", "#FFFFFF": "White", "#808080": "Gray",
+                    "#FFA500": "Orange", "#800080": "Purple", "#FFC0CB": "Pink",
+                    "#A52A2A": "Brown", "#008000": "Dark Green", "#000080": "Navy"
+                };
+                return colorMap[hexCode] || "Custom Color";
+            }
+
+            // Make functions available globally for inline onclick handlers
+            window.removeColorFromChip = function(color) {
+                removeColor(color);
+            }
+
+            window.removeColorNameInput = function(color) {
+                removeColorNameInput(color);
+            }
+
+            function removeColor(color) {
+                selectedColors = selectedColors.filter(c => c !== color);
+                $(`#colorChip-${color.replace('#', '')}`).remove();
+                $(`#colorNameGroup-${color.replace('#', '')}`).remove();
+                delete selectedColorNames[color];
+                $(`.color-option[data-color="${color}"]`).removeClass('selected');
+
+                if (selectedColors.length === 0) {
+                    $('#colorNamesContainer').hide();
+                }
+
+                validateForm();
+                updateColorInputs();
+            }
+
+            function updateColorInputs() {
+                $('input[name="ColorHexCodes"]').remove();
+                $('input[name="ColorNames"]').remove();
+
+                const uniqueColors = [...new Set(selectedColors)];
+                uniqueColors.forEach(color => {
+                    $('#createForm').append(`<input type="hidden" name="ColorHexCodes" value="${color}" />`);
+                    $('#createForm').append(`<input type="hidden" name="ColorNames" value="${selectedColorNames[color] || getDefaultColorName(color)}" />`);
+                });
+
+                selectedColors = uniqueColors;
+            }
+
+            // Function to validate all form fields
+            function validateForm() {
+                let isValid = true;
+
+                // Check basic required fields
+                const name = $('#Name').val();
+                const description = $('#Description').val();
+                const categoryId = $('#CategoryId').val();
+                const price = parseFloat($('#Price').val());
+                const stockQuantity = parseInt($('#StockQuantity').val());
+
+                // Validate Name
+                if (!name || name.trim() === '') {
+                    isValid = false;
+                }
+
+                // Validate Description
+                if (!description || description.trim() === '') {
+                    isValid = false;
+                }
+
+                // Validate Category
+                if (!categoryId) {
+                    isValid = false;
+                }
+
+                // Validate Price
+                if (isNaN(price) || price <= 0) {
+                    isValid = false;
+                }
+
+                // Validate Stock Quantity
+                if (isNaN(stockQuantity) || stockQuantity < 0) {
+                    isValid = false;
+                }
+
+                // Validate colors
+                if (selectedColors.length === 0) {
+                    $('#colorError').text('Please select at least one color.');
+                    isValid = false;
+                } else {
+                    $('#colorError').text('');
+                }
+
+                // Validate color names
+                if (selectedColors.length > 0) {
+                    let allNamesValid = true;
+                    selectedColors.forEach(color => {
+                        const name = selectedColorNames[color] || '';
+                        if (!name.trim()) {
+                            allNamesValid = false;
+                        }
+                    });
+
+                    if (!allNamesValid) {
+                        $('#colorNameError').text('Please enter a name for each selected color.');
+                        isValid = false;
+                    } else {
+                        $('#colorNameError').text('');
+                    }
+                }
+
+                // Validate images
+                if (imageFiles.length === 0) {
+                    $('#imageError').text('Please upload at least one product image.');
+                    isValid = false;
+                } else {
+                    // Check for image validation errors
+                    const imageErrorText = $('#imageError').text();
+                    if (imageErrorText.includes('too large') || imageErrorText.includes('not a valid image')) {
+                        isValid = false;
+                    }
+                }
+
+                // Update submit button state
+                updateSubmitButton(isValid);
+                isFormValid = isValid;
+
+                return isValid;
+            }
+
+            // Function to update submit button state
+            function updateSubmitButton(isEnabled) {
+                const $submitButton = $('#submitButton');
+
+                if (isEnabled) {
+                    $submitButton.prop('disabled', false);
+                } else {
+                    $submitButton.prop('disabled', true);
+                }
+            }
+
+            // Add input event listeners to required fields for real-time validation
+            $('#Name, #Price, #StockQuantity, #Description').on('input', function() {
+                validateForm();
+            });
+
+            $('#CategoryId').on('change', function() {
+                validateForm();
+            });
+
+            // Handle form submission
+            $('#createForm').on('submit', function(e) {
+                if (!isFormValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields correctly before submitting.');
+                    return false;
+                }
+
+                selectedColors = [...new Set(selectedColors)];
+                updateColorInputs();
+
+                if (!validateForm()) {
+                    e.preventDefault();
+                    alert('Please fix the validation errors before submitting.');
+                    return false;
+                }
+
+                $('button[type="submit"]').html('<i class="fas fa-spinner fa-spin mr-2"></i>Creating...').prop('disabled', true);
+            });
+        });
+    </script>
+}

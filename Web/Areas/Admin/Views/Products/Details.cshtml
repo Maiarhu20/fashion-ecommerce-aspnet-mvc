@@ -1,0 +1,864 @@
+﻿@model Core.DTOs.Products.ProductResponseDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Product Details";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    /* ========== PRIMARY COLOR VARIABLES ========== */
+    :root {
+        --primary-color: #912356;
+        --primary-hover: #7a1e48;
+        --primary-light: rgba(145, 35, 86, 0.1);
+        --primary-lighter: rgba(145, 35, 86, 0.05);
+    }
+
+    /* ========== PAGE HEADER ========== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.75rem;
+        }
+
+    .header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .btn-edit {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: beige;
+    }
+
+        .btn-edit:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: beige;
+        }
+
+    .btn-back {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+        .btn-back:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: beige;
+        }
+
+    /* ========== CARD STYLES ========== */
+    .card-custom {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header-custom {
+        background-color: var(--primary-lighter);
+        border-bottom: 2px solid var(--primary-color);
+        padding: 1rem 1.25rem;
+    }
+
+        .card-header-custom h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+    /* ========== PRODUCT INFO TABLE ========== */
+    .info-table {
+        margin: 0;
+    }
+
+        .info-table th {
+            background-color: var(--primary-lighter);
+            color: var(--primary-color);
+            font-weight: 600;
+            width: 35%;
+            vertical-align: middle;
+        }
+
+        .info-table td {
+            vertical-align: middle;
+        }
+
+    .price-value {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    /* ========== MOBILE INFO CARDS ========== */
+    .mobile-info-view {
+        display: none;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+    }
+
+        .info-label i {
+            width: 18px;
+            text-align: center;
+        }
+
+    .info-value {
+        text-align: right;
+        color: #333;
+        font-size: 0.9rem;
+        word-break: break-word;
+        max-width: 60%;
+    }
+
+    /* ========== IMAGES ========== */
+    .image-container {
+        position: relative;
+        display: block;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .image-container img {
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.05);
+        }
+
+    .primary-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 1;
+        font-size: 0.75rem;
+        padding: 0.3em 0.7em;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 4px;
+    }
+
+    .image-scroll-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 10px;
+    }
+
+        .image-scroll-container::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .image-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .image-scroll-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+    /* ========== COLOR CHIPS ========== */
+    .selected-color-chip {
+        display: inline-flex;
+        align-items: center;
+        background: var(--primary-lighter);
+        border: 1px solid var(--primary-light);
+        border-radius: 25px;
+        padding: 8px 14px;
+        margin: 4px;
+        transition: all 0.3s ease;
+    }
+
+        .selected-color-chip:hover {
+            box-shadow: 0 2px 8px rgba(145, 35, 86, 0.2);
+        }
+
+        .selected-color-chip .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .selected-color-chip span {
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+    /* ========== BADGES ========== */
+    .badge-active {
+        background-color: #28a745;
+        color: white;
+        padding: 0.4em 0.8em;
+    }
+
+    .badge-deleted {
+        background-color: #dc3545;
+        color: white;
+        padding: 0.4em 0.8em;
+    }
+
+    .badge-discount {
+        background-color: #28a745;
+        color: white;
+        padding: 0.3em 0.6em;
+        font-size: 0.85rem;
+    }
+
+    /* ========== ACTION BUTTONS ========== */
+    .btn-delete {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+            color: white;
+        }
+
+    .btn-restore {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: beige;
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+        .btn-restore:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: beige;
+        }
+
+    /* ========== STAT CARDS ========== */
+    .stat-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card {
+        flex: 1;
+        min-width: 100px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+        .stat-card i {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+    /* ========== RESPONSIVE: LARGE (992px+) ========== */
+    @@media (min-width: 992px) {
+        .desktop-info-view {
+            display: block;
+        }
+
+        .mobile-info-view {
+            display: none;
+        }
+    }
+
+    /* ========== RESPONSIVE: MEDIUM & BELOW (< 992px) ========== */
+    @@media (max-width: 991.98px) {
+        .desktop-info-view {
+            display: none;
+        }
+
+        .mobile-info-view {
+            display: block;
+        }
+
+        .stat-card {
+            min-width: calc(50% - 0.5rem);
+        }
+    }
+
+    /* ========== RESPONSIVE: SMALL (< 768px) ========== */
+    @@media (max-width: 767.98px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+        .header-actions {
+            justify-content: center;
+            width: 100%;
+        }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .info-value {
+            text-align: left;
+            max-width: 100%;
+        }
+
+        .selected-color-chip {
+            padding: 6px 10px;
+        }
+
+            .selected-color-chip .color-preview {
+                width: 20px;
+                height: 20px;
+                margin-right: 8px;
+            }
+
+            .selected-color-chip span {
+                font-size: 0.8rem;
+            }
+    }
+
+    /* ========== RESPONSIVE: EXTRA SMALL (< 576px) ========== */
+    @@media (max-width: 575.98px) {
+        .page-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .header-actions {
+            flex-direction: column;
+        }
+
+            .header-actions .btn {
+                width: 100%;
+            }
+
+        .btn-text-full {
+            display: none;
+        }
+
+        .btn-text-short {
+            display: inline;
+        }
+
+        .card-header-custom {
+            padding: 0.75rem 1rem;
+        }
+
+            .card-header-custom h6 {
+                font-size: 0.9rem;
+            }
+
+        .card-body {
+            padding: 0.75rem;
+        }
+
+        .stat-card {
+            min-width: calc(50% - 0.5rem);
+            padding: 0.75rem;
+        }
+
+            .stat-card .stat-value {
+                font-size: 1.25rem;
+            }
+
+            .stat-card .stat-label {
+                font-size: 0.7rem;
+            }
+
+        .info-label {
+            font-size: 0.8rem;
+        }
+
+        .info-value {
+            font-size: 0.85rem;
+        }
+
+        .price-value {
+            font-size: 1rem;
+        }
+        /* Mobile images */
+        .image-scroll-container .image-container img {
+            height: 100px !important;
+        }
+
+        .primary-badge {
+            font-size: 0.65rem;
+            padding: 0.2em 0.5em;
+        }
+    }
+
+    /* ========== BUTTON TEXT TOGGLE ========== */
+    .btn-text-short {
+        display: none;
+    }
+
+    .btn-text-full {
+        display: inline;
+    }
+
+    @@media (max-width: 575.98px) {
+        .btn-text-short {
+            display: inline;
+        }
+
+        .btn-text-full {
+            display: none;
+        }
+    }
+
+    /* ========== DESCRIPTION BOX ========== */
+    .description-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        border-left: 4px solid var(--primary-color);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #555;
+    }
+
+    .no-data {
+        color: #888;
+        font-style: italic;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header - Responsive -->
+    <div class="page-header">
+        <h1>
+            <i class="fas fa-box mr-2" style="color: #912356;"></i>
+            Product Details
+        </h1>
+        <div class="header-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-edit">
+                <i class="fas fa-edit mr-1"></i>
+                <span class="btn-text-full">Edit Product</span>
+                <span class="btn-text-short">Edit</span>
+            </a>
+            <a asp-action="Index" class="btn btn-back">
+                <i class="fas fa-arrow-left mr-1"></i>
+                <span class="btn-text-full">Back to List</span>
+                <span class="btn-text-short">Back</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stat-row">
+        <div class="stat-card">
+            <i class="fas fa-money-bill-wave d-block"></i>
+            <div class="stat-value">EGP @Model.FinalPrice.ToString("N0")</div>
+            <div class="stat-label">Final Price</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-boxes d-block"></i>
+            <div class="stat-value">@Model.StockQuantity</div>
+            <div class="stat-label">In Stock</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-shopping-cart d-block"></i>
+            <div class="stat-value">@Model.OrderCount</div>
+            <div class="stat-label">Orders</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-star d-block"></i>
+            <div class="stat-value">@Model.ReviewCount</div>
+            <div class="stat-label">Reviews</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- Images Card -->
+            <div class="card card-custom">
+                <div class="card-header card-header-custom">
+                    <h6><i class="fas fa-images mr-2"></i>Product Images</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        <!-- Desktop view - grid layout -->
+                        <div class="d-none d-md-block">
+                            <div class="row">
+                                @foreach (var image in Model.Images.OrderBy(img => img.DisplayOrder))
+                                {
+                                    <div class="col-md-4 mb-3">
+                                        <div class="image-container">
+                                            <img src="@image.ImageUrl" class="img-fluid rounded border" alt="Product image"
+                                                 style="height: 150px; object-fit: cover; width: 100%;">
+                                            @if (image.IsPrimary)
+                                            {
+                                                <span class="primary-badge">
+                                                    <i class="fas fa-star mr-1"></i>Primary
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Mobile view - horizontal scroll -->
+                        <div class="d-md-none">
+                            <div class="image-scroll-container">
+                                <div class="d-flex flex-nowrap overflow-auto pb-2">
+                                    @foreach (var image in Model.Images.OrderBy(img => img.DisplayOrder))
+                                    {
+                                        <div class="mr-3" style="min-width: 130px;">
+                                            <div class="image-container">
+                                                <img src="@image.ImageUrl" class="img-fluid rounded border" alt="Product image"
+                                                     style="height: 120px; object-fit: cover; width: 100%;">
+                                                @if (image.IsPrimary)
+                                                {
+                                                    <span class="primary-badge">
+                                                        <i class="fas fa-star mr-1"></i>Primary
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <p class="text-muted small text-center mt-2">
+                                <i class="fas fa-hand-point-left mr-1"></i>Swipe to see more images
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                            <p class="no-data">No images available for this product.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Product Information Card -->
+            <div class="card card-custom">
+                <div class="card-header card-header-custom">
+                    <h6><i class="fas fa-info-circle mr-2"></i>Product Information</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Desktop Table View -->
+                    <div class="desktop-info-view">
+                        <table class="table table-bordered info-table">
+                            <tr>
+                                <th><i class="fas fa-tag mr-2"></i>Name</th>
+                                <td><strong>@Model.Name</strong></td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-align-left mr-2"></i>Description</th>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(Model.Description))
+                                    {
+                                        <div class="description-box">@Model.Description</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="no-data">No description</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-folder mr-2"></i>Category</th>
+                                <td>@(Model.CategoryName ?? "Unknown")</td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-money-bill mr-2"></i>Base Price</th>
+                                <td class="price-value">EGP @Model.Price.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-percent mr-2"></i>Discount</th>
+                                <td>
+                                    @if (Model.DiscountPercent.HasValue && Model.DiscountPercent > 0)
+                                    {
+                                        <span class="badge badge-discount">
+                                            <i class="fas fa-fire mr-1"></i>@Model.DiscountPercent.Value% OFF
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="no-data">No discount</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-tag mr-2"></i>Final Price</th>
+                                <td class="price-value">EGP @Model.FinalPrice.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-toggle-on mr-2"></i>Status</th>
+                                <td>
+                                    @if (Model.IsDeleted)
+                                    {
+                                        <span class="badge badge-deleted">
+                                            <i class="fas fa-trash mr-1"></i>Deleted
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-active">
+                                            <i class="fas fa-check mr-1"></i>Active
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-calendar mr-2"></i>Created Date</th>
+                                <td>@Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Info View -->
+                    <div class="mobile-info-view">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-tag"></i>Name</span>
+                            <span class="info-value"><strong>@Model.Name</strong></span>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <div class="info-item" style="flex-direction: column;">
+                                <span class="info-label"><i class="fas fa-align-left"></i>Description</span>
+                                <div class="description-box mt-2" style="width: 100%;">@Model.Description</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="info-item">
+                                <span class="info-label"><i class="fas fa-align-left"></i>Description</span>
+                                <span class="info-value no-data">No description</span>
+                            </div>
+                        }
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-folder"></i>Category</span>
+                            <span class="info-value">@(Model.CategoryName ?? "Unknown")</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-money-bill"></i>Base Price</span>
+                            <span class="info-value price-value">EGP @Model.Price.ToString("N2")</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-percent"></i>Discount</span>
+                            <span class="info-value">
+                                @if (Model.DiscountPercent.HasValue && Model.DiscountPercent > 0)
+                                {
+                                    <span class="badge badge-discount">@Model.DiscountPercent.Value% OFF</span>
+                                }
+                                else
+                                {
+                                    <span class="no-data">No discount</span>
+                                }
+                            </span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-tag"></i>Final Price</span>
+                            <span class="info-value price-value">EGP @Model.FinalPrice.ToString("N2")</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-toggle-on"></i>Status</span>
+                            <span class="info-value">
+                                @if (Model.IsDeleted)
+                                {
+                                    <span class="badge badge-deleted">Deleted</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-active">Active</span>
+                                }
+                            </span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-calendar"></i>Created</span>
+                            <span class="info-value">@Model.CreatedDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <!-- Colors Card -->
+            <div class="card card-custom">
+                <div class="card-header card-header-custom">
+                    <h6><i class="fas fa-palette mr-2"></i>Available Colors</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.Colors != null && Model.Colors.Any())
+                    {
+                        <div class="d-flex flex-wrap">
+                            @foreach (var color in Model.Colors)
+                            {
+                                <div class="selected-color-chip">
+                                    <div class="color-preview" style="background-color: @color.ColorHexCode;"></div>
+                                    <span>@color.ColorName</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="fas fa-palette fa-2x text-muted mb-2"></i>
+                            <p class="no-data mb-0">No colors specified for this product.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="card card-custom">
+                <div class="card-header card-header-custom">
+                    <h6><i class="fas fa-cogs mr-2"></i>Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    @if (!Model.IsDeleted)
+                    {
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-delete"
+                                    onclick="return confirm('Are you sure you want to delete this product?')">
+                                <i class="fas fa-trash mr-2"></i>Delete Product
+                            </button>
+                        </form>
+                        @* <p class="text-muted small text-center mt-2 mb-0">
+                            <i class="fas fa-info-circle mr-1"></i>This will soft-delete the product
+                        </p> *@
+                    }
+                    else
+                    {
+                        <form asp-action="Restore" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-restore">
+                                <i class="fas fa-trash-restore mr-2"></i>Restore Product
+                            </button>
+                        </form>
+                        <p class="text-muted small text-center mt-2 mb-0">
+                            <i class="fas fa-info-circle mr-1"></i>This will restore the deleted product
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <!-- Additional Info Card -->
+            @* <div class="card card-custom">
+                <div class="card-header card-header-custom">
+                    <h6><i class="fas fa-chart-bar mr-2"></i>Product Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-right">
+                                <i class="fas fa-boxes fa-2x mb-2" style="color: var(--primary-color);"></i>
+                                <h4 class="mb-0" style="color: var(--primary-color);">@Model.StockQuantity</h4>
+                                <small class="text-muted">Stock</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-right">
+                                <i class="fas fa-shopping-cart fa-2x mb-2" style="color: var(--primary-color);"></i>
+                                <h4 class="mb-0" style="color: var(--primary-color);">@Model.OrderCount</h4>
+                                <small class="text-muted">Orders</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div>
+                                <i class="fas fa-star fa-2x mb-2" style="color: var(--primary-color);"></i>
+                                <h4 class="mb-0" style="color: var(--primary-color);">@Model.ReviewCount</h4>
+                                <small class="text-muted">Reviews</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> *@
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Add subtle animation to images on mobile scroll
+            $('.image-scroll-container').on('scroll', function() {
+                $(this).find('img').css('transform', 'scale(1.02)');
+                setTimeout(function() {
+                    $('.image-scroll-container img').css('transform', 'scale(1)');
+                }, 300);
+            });
+        });
+    </script>
+}

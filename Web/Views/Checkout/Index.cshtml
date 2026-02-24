@@ -1,0 +1,1172 @@
+﻿@model Core.DTOs.Checkout.CheckoutDto
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var primaryColor = "#912356";
+    var primaryDark = "#7a1d47";
+    var primaryLight = "#f9e8e9";
+}
+
+<div class="checkout-container">
+    <!-- Progress Steps -->
+    <div class="checkout-progress">
+        <div class="progress-step completed">
+            <div class="step-icon"><i class="fas fa-shopping-cart"></i></div>
+            <span class="step-label">Cart</span>
+        </div>
+        <div class="progress-line completed"></div>
+        <div class="progress-step active">
+            <div class="step-icon"><i class="fas fa-clipboard-list"></i></div>
+            <span class="step-label">Checkout</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+            <span class="step-label">Confirmation</span>
+        </div>
+    </div>
+
+    <h1 class="checkout-title">
+        <i class="fas fa-shopping-bag me-2"></i>Checkout
+    </h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Order Summary - Shows first on mobile -->
+        <div class="col-lg-5 order-lg-2">
+            <div class="order-summary-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+                    <span class="item-count">@Model.Cart.Items.Count item(s)</span>
+                </div>
+                <div class="card-body-custom">
+                    <!-- Cart Items -->
+                    <div class="cart-items-list">
+                        @foreach (var item in Model.Cart.Items)
+                        {
+                            <div class="cart-item">
+                                <div class="item-details">
+                                    <h6 class="item-name">@item.ProductName</h6>
+                                    <div class="item-meta">
+                                        <span class="qty">@item.Quantity x EGP @item.UnitPrice.ToString("N2")</span>
+                                        @if (!string.IsNullOrEmpty(item.SelectedColor))
+                                        {
+                                            <span class="color-badge">
+                                                <span class="color-dot" style="background-color: @item.SelectedColor;"></span>
+                                                @item.SelectedColor
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="item-price">EGP @item.LineTotal.ToString("N2")</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <!-- Totals -->
+                    <div class="summary-totals">
+                        <div class="total-row">
+                            <span>Subtotal</span>
+                            <span>EGP @Model.Cart.Subtotal.ToString("N2")</span>
+                        </div>
+
+                        @if (Model.Cart.DiscountAmount > 0)
+                        {
+                            <div class="total-row discount">
+                                <span><i class="fas fa-tag me-1"></i>Discount (@Model.Cart.DiscountCode)</span>
+                                <span>-EGP @Model.Cart.DiscountAmount.ToString("N2")</span>
+                            </div>
+                        }
+
+                        <div class="total-row">
+                            <span><i class="fas fa-truck me-1"></i>Shipping</span>
+                            <span id="shippingCostDisplay">EGP @Model.ShippingCost.ToString("N2")</span>
+                        </div>
+
+                        <div class="summary-divider"></div>
+
+                        <div class="total-row grand-total">
+                            <span>Total</span>
+                            <span id="grandTotalDisplay">EGP @Model.GrandTotal.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <!-- Secure Badge -->
+                    <div class="secure-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure Checkout - Your data is protected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <div class="col-lg-7 order-lg-1">
+            <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+                @Html.AntiForgeryToken()
+
+                <!-- Contact Information -->
+                <div class="checkout-card">
+                    <div class="card-header-custom">
+                        <h5><i class="fas fa-user me-2"></i>Contact Information</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="GuestName" class="form-label">Full Name <span class="required">*</span></label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input asp-for="GuestName" class="form-control" placeholder="Enter your full name" required>
+                                </div>
+                                <span asp-validation-for="GuestName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="GuestEmail" class="form-label">Email <span class="required">*</span></label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-envelope"></i>
+                                    <input asp-for="GuestEmail" type="email" class="form-control" placeholder="your@email.com" required>
+                                </div>
+                                <span asp-validation-for="GuestEmail" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="GuestPhone" class="form-label">Phone Number <span class="required">*</span></label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-phone"></i>
+                                    <input asp-for="GuestPhone" class="form-control" placeholder="01xxxxxxxxx" required>
+                                </div>
+                                <span asp-validation-for="GuestPhone" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="checkout-card">
+                    <div class="card-header-custom">
+                        <h5><i class="fas fa-map-marker-alt me-2"></i>Shipping Address</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="ShippingAddress" class="form-label">Address <span class="required">*</span></label>
+                                <div class="input-icon-wrapper textarea-wrapper">
+                                    <i class="fas fa-home"></i>
+                                    <textarea asp-for="ShippingAddress" class="form-control" rows="3"
+                                              placeholder="Street address, apartment, building..." required></textarea>
+                                </div>
+                                <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ShippingCityId" class="form-label">City <span class="required">*</span></label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-city"></i>
+                                    <select asp-for="ShippingCityId" class="form-select" required id="citySelect">
+                                        <option value="">Select City</option>
+                                        @foreach (var city in Model.AvailableCities)
+                                        {
+                                            <option value="@city.Id" data-cost="@city.ShippingCost">
+                                                @city.CityName - EGP @city.ShippingCost.ToString("N2")
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="ShippingCityId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ShippingPostalCode" class="form-label">Postal Code <span class="optional">(Optional)</span></label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-mail-bulk"></i>
+                                    <input asp-for="ShippingPostalCode" class="form-control" placeholder="Postal code">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-card">
+                    <div class="card-header-custom">
+                        <h5><i class="fas fa-credit-card me-2"></i>Payment Method</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="payment-methods">
+                            <!-- Cash on Delivery -->
+                            <label class="payment-option">
+                                <input class="payment-radio" type="radio" asp-for="PaymentMethod"
+                                       value="@PaymentMethod.CashOnDelivery" id="cod" checked>
+                                <div class="payment-content">
+                                    <div class="payment-icon cod-icon">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <span class="payment-title">Cash on Delivery</span>
+                                        <span class="payment-desc">Pay when you receive your order</span>
+                                    </div>
+                                    <div class="payment-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Credit/Debit Card -->
+                            <label class="payment-option">
+                                <input class="payment-radio" type="radio" asp-for="PaymentMethod"
+                                       value="@PaymentMethod.Card" id="creditCard">
+                                <div class="payment-content">
+                                    <div class="payment-icon card-icon">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <span class="payment-title">Credit/Debit Card</span>
+                                        <span class="payment-desc">Visa, Mastercard, Meeza</span>
+                                    </div>
+                                    <div class="payment-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Mobile Wallet -->
+                            <label class="payment-option">
+                                <input class="payment-radio" type="radio" asp-for="PaymentMethod"
+                                       value="@PaymentMethod.Wallet" id="wallet">
+                                <div class="payment-content">
+                                    <div class="payment-icon wallet-icon">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <span class="payment-title">Mobile Wallet</span>
+                                        <span class="payment-desc">Vodafone Cash, Orange, Etisalat</span>
+                                    </div>
+                                    <div class="payment-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Payment Description -->
+                        <div id="paymentDescription" class="payment-description">
+                            <div id="codDescription" class="description-content">
+                                <div class="description-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="description-text">
+                                    <h6>Cash on Delivery</h6>
+                                    <p>You'll pay in cash when your order is delivered. No online payment required.</p>
+                                </div>
+                            </div>
+                            <div id="codDepositWarning" class="deposit-warning">
+                                <div class="warning-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="warning-content">
+                                    <h6>⚠️ Deposit Required / مطلوب عربون</h6>
+                                    <div class="bilingual-text">
+                                        <p class="english">
+                                            <strong>Important:</strong> For Cash on Delivery orders, a <strong>50% deposit</strong> is required to confirm your order.
+                                            Your order will not be processed until the deposit is received.
+                                        </p>
+                                        <p class="arabic">
+                                            <strong>هام:</strong> لطلبات الدفع عند الاستلام، يجب دفع <strong>عربون 50%</strong> من قيمة الطلب لتأكيد طلبك.
+                                            لن يتم معالجة طلبك حتى يتم استلام العربون.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="cardDescription" class="description-content" style="display: none;">
+                                <div class="description-icon success">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="description-text">
+                                    <h6>Secure Card Payment</h6>
+                                    <p>You'll be redirected to a secure payment page to enter your card details.</p>
+                                </div>
+                            </div>
+                            <div id="walletDescription" class="description-content" style="display: none;">
+                                <div class="description-icon wallet">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="description-text">
+                                    <h6>Mobile Wallet Payment</h6>
+                                    <p>You'll be redirected to complete payment using your mobile wallet. Make sure you have sufficient balance.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                <div class="checkout-card">
+                    <div class="card-header-custom">
+                        <h5><i class="fas fa-sticky-note me-2"></i>Order Notes <span class="optional">(Optional)</span></h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <textarea asp-for="Notes" class="form-control" rows="3"
+                                  placeholder="Any special instructions or notes about your order..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="checkout-actions">
+                    <button type="submit" class="btn-checkout" id="submitBtn">
+                        <span id="buttonText">Place Order</span>
+                        <span id="buttonIcon"><i class="fas fa-arrow-right ms-2"></i></span>
+                    </button>
+                    <a href="@Url.Action("Index", "Cart")" class="btn-back">
+                        <i class="fas fa-arrow-left me-2"></i>Return to Cart
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary: #912356;
+        --primary-dark: #7a1d47;
+        --primary-light: #f9e8e9;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-600: #6c757d;
+        --white: #ffffff;
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --shadow-hover: 0 8px 25px rgba(145, 35, 86, 0.15);
+        --radius: 12px;
+        --radius-sm: 8px;
+    }
+
+    .checkout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px 40px;
+    }
+
+    /* Progress Steps */
+    .checkout-progress {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-200);
+        color: var(--gray-600);
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.completed .step-icon {
+        background: var(--primary);
+        color: var(--white);
+    }
+
+    .progress-step.active .step-icon {
+        background: var(--primary);
+        color: var(--white);
+        box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--gray-600);
+    }
+
+    .progress-step.active .step-label,
+    .progress-step.completed .step-label {
+        color: var(--primary);
+    }
+
+    .progress-line {
+        width: 60px;
+        height: 3px;
+        background: var(--gray-200);
+        margin: 0 10px;
+        margin-bottom: 25px;
+    }
+
+        .progress-line.completed {
+            background: var(--primary);
+        }
+
+    /* Title */
+    .checkout-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Cards */
+    .checkout-card,
+    .order-summary-card {
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+        overflow: hidden;
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+
+        .checkout-card:hover,
+        .order-summary-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .card-header-custom h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+    .item-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .card-body-custom {
+        padding: 20px;
+    }
+
+    /* Form Inputs */
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .required {
+        color: var(--danger);
+    }
+
+    .optional {
+        color: var(--gray-600);
+        font-weight: 400;
+        font-size: 0.8rem;
+    }
+
+    .input-icon-wrapper {
+        position: relative;
+    }
+
+        .input-icon-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            z-index: 1;
+        }
+
+        .input-icon-wrapper.textarea-wrapper i {
+            top: 20px;
+            transform: none;
+        }
+
+        .input-icon-wrapper .form-control,
+        .input-icon-wrapper .form-select {
+            padding-left: 45px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .input-icon-wrapper textarea.form-control {
+            height: auto;
+            padding-top: 12px;
+        }
+
+        .input-icon-wrapper .form-control:focus,
+        .input-icon-wrapper .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+    /* Payment Methods */
+    .payment-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .payment-option {
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .payment-radio {
+        display: none;
+    }
+
+    .payment-content {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-sm);
+        transition: all 0.3s ease;
+        background: var(--white);
+    }
+
+    .payment-radio:checked + .payment-content {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    .payment-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .cod-icon {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .card-icon {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .wallet-icon {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .payment-info {
+        flex: 1;
+    }
+
+    .payment-title {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+    }
+
+    .payment-desc {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--gray-600);
+    }
+
+    .payment-check {
+        color: var(--gray-200);
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .payment-radio:checked + .payment-content .payment-check {
+        color: var(--primary);
+    }
+
+    /* Payment Description */
+    .payment-description {
+        margin-top: 20px;
+        padding: 15px;
+        background: var(--gray-100);
+        border-radius: var(--radius-sm);
+        border-left: 4px solid var(--primary);
+    }
+
+    .description-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .description-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-light);
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+        .description-icon.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .description-icon.wallet {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+    .description-text h6 {
+        margin: 0 0 5px 0;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .description-text p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--gray-600);
+    }
+
+    /* Deposit Warning */
+    .deposit-warning {
+        margin-top: 15px;
+        padding: 15px;
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        border: 2px solid var(--warning);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .warning-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--warning);
+        color: #333;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .warning-content h6 {
+        margin: 0 0 10px 0;
+        font-weight: 700;
+        color: #856404;
+        font-size: 1rem;
+    }
+
+    .bilingual-text .english,
+    .bilingual-text .arabic {
+        margin: 0 0 10px 0;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .bilingual-text .arabic {
+        direction: rtl;
+        text-align: right;
+        border-top: 1px dashed #c9a227;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    /* Order Summary */
+    .cart-items-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+    .item-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+
+    .item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .qty {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+    }
+
+    .color-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        background: var(--gray-100);
+        padding: 2px 8px;
+        border-radius: 12px;
+    }
+
+    .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: var(--primary);
+        white-space: nowrap;
+    }
+
+    .summary-divider {
+        height: 1px;
+        background: var(--gray-200);
+        margin: 15px 0;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 0.95rem;
+    }
+
+        .total-row.discount {
+            color: var(--success);
+        }
+
+        .total-row.grand-total {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            padding-top: 12px;
+        }
+
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+        padding: 10px;
+        background: #e8f5e9;
+        border-radius: var(--radius-sm);
+        color: #2e7d32;
+        font-size: 0.85rem;
+    }
+
+    /* Action Buttons */
+    .checkout-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn-checkout {
+        width: 100%;
+        padding: 16px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(145, 35, 86, 0.3);
+        }
+
+        .btn-checkout:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-checkout.btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #1e7e34 100%);
+        }
+
+    .btn-back {
+        width: 100%;
+        padding: 14px 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius);
+        background: var(--white);
+        color: var(--gray-600);
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-back:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+    /* Responsive */
+    @@media (max-width: 991.98px) {
+        .checkout-progress
+
+    {
+        padding: 15px 10px;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .step-label {
+        font-size: 0.75rem;
+    }
+
+    .progress-line {
+        width: 40px;
+    }
+
+    .checkout-title {
+        font-size: 1.5rem;
+    }
+
+    }
+
+    @@media (max-width: 767.98px) {
+        .checkout-container
+
+    {
+        padding: 15px 10px 30px;
+    }
+
+    .checkout-progress {
+        padding: 12px 8px;
+        margin-bottom: 20px;
+    }
+
+    .step-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .step-label {
+        font-size: 0.7rem;
+    }
+
+    .progress-line {
+        width: 25px;
+        margin: 0 5px;
+    }
+
+    .checkout-title {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+
+    .card-header-custom {
+        padding: 12px 15px;
+    }
+
+        .card-header-custom h5 {
+            font-size: 1rem;
+        }
+
+    .card-body-custom {
+        padding: 15px;
+    }
+
+    .payment-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        margin-right: 10px;
+    }
+
+    .payment-content {
+        padding: 12px;
+    }
+
+    .payment-title {
+        font-size: 0.95rem;
+    }
+
+    .payment-desc {
+        font-size: 0.8rem;
+    }
+
+    .deposit-warning {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .warning-icon {
+        margin: 0 auto;
+    }
+
+    .bilingual-text .arabic {
+        text-align: center;
+    }
+
+    .btn-checkout,
+    .btn-back {
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+
+    .order-summary-card {
+        position: sticky;
+        top: 10px;
+    }
+
+    }
+
+    @@media (max-width: 575.98px) {
+        .payment-content
+
+    {
+        flex-wrap: wrap;
+    }
+
+    .payment-info {
+        flex: 1 1 calc(100% - 60px);
+    }
+
+    .payment-check {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .payment-option {
+        position: relative;
+    }
+
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .checkout-card {
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+        .checkout-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .checkout-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .checkout-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .checkout-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+</style>
+
+@section Scripts {
+    <script>
+        const checkoutForm = document.getElementById('checkoutForm');
+        const shippingCostInput = document.createElement('input');
+        shippingCostInput.type = 'hidden';
+        shippingCostInput.name = 'ShippingCost';
+        shippingCostInput.id = 'calculatedShippingCost';
+        shippingCostInput.value = '0';
+        checkoutForm.appendChild(shippingCostInput);
+
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            const buttonText = document.getElementById('buttonText');
+            const buttonIcon = document.getElementById('buttonIcon');
+            const codRadio = document.getElementById('cod');
+            // const cardRadio = document.getElementById('creditCard');
+            // const walletRadio = document.getElementById('wallet');
+            const codDescription = document.getElementById('codDescription');
+            const codDepositWarning = document.getElementById('codDepositWarning');
+            // const cardDescription = document.getElementById('cardDescription');
+            // const walletDescription = document.getElementById('walletDescription');
+
+            // Hide all descriptions
+            codDescription.style.display = 'none';
+            codDepositWarning.style.display = 'none';
+            // cardDescription.style.display = 'none';
+            // walletDescription.style.display = 'none';
+
+            // if (cardRadio.checked) {
+            //     buttonText.textContent = 'Go to Payment';
+            //     buttonIcon.innerHTML = '<i class="fas fa-credit-card ms-2"></i>';
+            //     submitBtn.classList.remove('btn-primary');
+            //     submitBtn.classList.add('btn-success');
+            //     cardDescription.style.display = 'flex';
+            // }
+            // else if (walletRadio.checked) {
+            //     buttonText.textContent = 'Go to Payment';
+            //     buttonIcon.innerHTML = '<i class="fas fa-mobile-alt ms-2"></i>';
+            //     submitBtn.classList.remove('btn-primary');
+            //     submitBtn.classList.add('btn-success');
+            //     walletDescription.style.display = 'flex';
+            // }
+            // else {
+                buttonText.textContent = 'Place Order';
+                buttonIcon.innerHTML = '<i class="fas fa-arrow-right ms-2"></i>';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+                codDescription.style.display = 'flex';
+                codDepositWarning.style.display = 'flex';
+            // }
+        }
+
+        document.querySelectorAll('.payment-radio').forEach(radio => {
+            radio.addEventListener('change', updateSubmitButton);
+        });
+
+        async function calculateShipping() {
+            const citySelect = document.getElementById('citySelect');
+            const selectedCityId = citySelect.value;
+            const shippingCostDisplay = document.getElementById('shippingCostDisplay');
+            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+            const cartTotal = @Model.Cart.TotalAmount;
+
+            if (!selectedCityId) {
+                shippingCostDisplay.textContent = 'EGP 0.00';
+                grandTotalDisplay.textContent = 'EGP ' + cartTotal.toFixed(2);
+                document.getElementById('calculatedShippingCost').value = '0';
+                return;
+            }
+
+            try {
+                citySelect.disabled = true;
+
+                const response = await fetch('@Url.Action("CalculateShipping", "Checkout")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ cityId: parseInt(selectedCityId) })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    shippingCostDisplay.textContent = 'EGP ' + data.shippingCost.toFixed(2);
+                    grandTotalDisplay.textContent = 'EGP ' + data.grandTotal.toFixed(2);
+                    document.getElementById('calculatedShippingCost').value = data.shippingCost;
+                } else {
+                    alert('Error: ' + data.message);
+                    citySelect.value = '';
+                }
+            } catch (error) {
+                console.error('Error calculating shipping:', error);
+                alert('Error calculating shipping cost.');
+                citySelect.value = '';
+            } finally {
+                citySelect.disabled = false;
+            }
+        }
+
+        document.getElementById('citySelect').addEventListener('change', calculateShipping);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSubmitButton();
+
+            const citySelect = document.getElementById('citySelect');
+            if (citySelect.value) {
+                calculateShipping();
+            }
+
+            const form = document.getElementById('checkoutForm');
+            form.addEventListener('submit', function() {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            });
+        });
+    </script>
+}

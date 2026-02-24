@@ -1,0 +1,413 @@
+﻿@{
+    var primaryColor = "#912356";
+    var lightColor = "#f9e8e9";
+    var white = "#ffffff";
+}
+
+<footer class="footer mt-auto" style="background-color: @primaryColor; color: white;">
+    <div class="container-fluid py-5">
+        <div class="row px-xl-5">
+            <!-- Logo & Description Column -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="footer-logo mb-4">
+                    <img src="" alt="La Bella Logo" style="height: 80px; filter: brightness(0) invert(1);">
+                </div>
+                <p class="mb-4" style="color: rgba(255,255,255,0.8);">
+                    La Bella Scarves offers premium quality scarves with elegant designs.
+                    Experience luxury and comfort with our exclusive collection.
+                </p>
+                <div class="footer-social d-flex">
+                    <a class="btn btn-outline-light btn-social mr-2" href="" target="_blank" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a class="btn btn-outline-light btn-social mr-2" href="" target="_blank" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a class="btn btn-outline-light btn-social" href="" target="_blank" aria-label="TikTok">
+                        <i class="fa-brands fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links Column -->
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h5 class="font-weight-bold mb-4" style="color: white;">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <a asp-controller="Home" asp-action="Index" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-chevron-right mr-2" style="color: @lightColor;"></i>Home
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a asp-controller="Products" asp-action="AllProducts" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-chevron-right mr-2" style="color: @lightColor;"></i>All Products
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a asp-controller="Home" asp-action="About" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-chevron-right mr-2" style="color: @lightColor;"></i>About Us
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="" target="_blank" class="text-white-50" style="text-decoration: none;">
+                            <i class="fas fa-chevron-right mr-2" style="color: @lightColor;"></i>Contact
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Policies Column -->
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h5 class="font-weight-bold mb-4" style="color: white;">Policies</h5>
+                <div class="policy-section">
+                    <!-- Exchange Policy -->
+                    <div class="policy-item mb-3">
+                        <div class="policy-header" data-toggle="collapse" data-target="#exchangePolicy" aria-expanded="false" style="cursor: pointer;">
+                            <i class="fas fa-exchange-alt mr-2" style="color: @lightColor;"></i>
+                            <span class="text-white-50">Exchange Policy</span>
+                            <i class="fas fa-chevron-down float-right policy-arrow" style="color: @lightColor; transition: transform 0.3s ease;"></i>
+                        </div>
+                        <div class="collapse policy-content" id="exchangePolicy">
+                            <div class="mt-2 p-2" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                                *******************************************
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Policy -->
+                    <div class="policy-item mb-3">
+                        <div class="policy-header" data-toggle="collapse" data-target="#deliveryPolicy" aria-expanded="false" style="cursor: pointer;">
+                            <i class="fas fa-truck mr-2" style="color: @lightColor;"></i>
+                            <span class="text-white-50">Delivery & Shipping</span>
+                            <i class="fas fa-chevron-down float-right policy-arrow" style="color: @lightColor; transition: transform 0.3s ease;"></i>
+                        </div>
+                        <div class="collapse policy-content" id="deliveryPolicy">
+                            <div class="mt-2 p-2" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                                ***********************************************
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refund Policy -->
+                    <div class="policy-item mb-3">
+                        <div class="policy-header" data-toggle="collapse" data-target="#refundPolicy" aria-expanded="false" style="cursor: pointer;">
+                            <i class="fas fa-undo mr-2" style="color: @lightColor;"></i>
+                            <span class="text-white-50">Refund & Cancellation</span>
+                            <i class="fas fa-chevron-down float-right policy-arrow" style="color: @lightColor; transition: transform 0.3s ease;"></i>
+                        </div>
+                        <div class="collapse policy-content" id="refundPolicy">
+                            <div class="mt-2 p-2" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                                ************************************************************
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Info Column -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="font-weight-bold mb-4" style="color: white;">Contact Info</h5>
+                <div class="contact-info">
+                    <div class="d-flex mb-3">
+                        <div class="icon mr-3" style="width: 40px; text-align: center;">
+                            <i class="fas fa-map-marker-alt" style="color: @lightColor; font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+                                Address: Egypt
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="icon mr-3" style="width: 40px; text-align: center;">
+                            <i class="fab fa-whatsapp" style="color: @lightColor; font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+                                WhatsApp: **************
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="icon mr-3" style="width: 40px; text-align: center;">
+                            <i class="fas fa-envelope" style="color: @lightColor; font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+                                Email: **************
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Newsletter Column -->
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h5 class="font-weight-bold mb-4" style="color: white;">Stay Updated</h5>
+                <p class="mb-4" style="color: rgba(255,255,255,0.8);">
+                    Subscribe to our newsletter for the latest updates on new arrivals and special offers.
+                </p>
+                <form id="newsletter-form">
+                    <div class="input-group">
+                        <input type="email"
+                               class="form-control"
+                               placeholder="Your Email"
+                               style="border: none; border-radius: 4px 0 0 4px;">
+                        <div class="input-group-append">
+                            <button class="btn btn-light"
+                                    type="submit"
+                                    style="background-color: @lightColor; color: @primaryColor; border: none; border-radius: 0 4px 4px 0;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="form-text text-white-50">We'll never share your email with anyone else.</small>
+                </form>
+                @* <div class="payment-methods mt-4">
+                    <h6 class="font-weight-bold mb-3" style="color: white;">Secure Payment</h6>
+                    <div class="d-flex">
+                        <i class="fab fa-cc-visa fa-2x mr-3" style="color: white;"></i>
+                        <i class="fab fa-cc-mastercard fa-2x mr-3" style="color: white;"></i>
+                        <i class="fas fa-wallet fa-2x" style="color: white;"></i>
+                    </div>
+                </div> *@
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Bar -->
+    <div class="border-top py-4" style="border-color: rgba(255,255,255,0.1) !important;">
+        <div class="container-fluid px-xl-5">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-left">
+                    <p class="mb-0" style="color: rgba(255,255,255,0.7);">
+                        &copy; @DateTime.Now.Year  All Rights Reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <p class="mb-0" style="color: rgba(255,255,255,0.7);">
+                        Developed and Designed by
+                        <a href="https://www.linkedin.com/in/maiar-hussein/"
+                           target="_blank"
+                           class="text-white-50 developer-credit"
+                           style="text-decoration: none;"
+                           title="View Maiar's LinkedIn Profile">
+                            Maiar Hussein
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        font-family: 'Poppins', sans-serif;
+    }
+
+        .footer a {
+            transition: all 0.3s ease;
+        }
+
+            .footer a:hover {
+                color: #f9e8e9 !important;
+                text-decoration: underline !important;
+                transform: translateX(5px);
+            }
+
+    .btn-social {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+        .btn-social:hover {
+            background-color: #f9e8e9 !important;
+            color: #912356 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+    .contact-info .icon {
+        flex-shrink: 0;
+    }
+
+    #newsletter-form input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(249, 232, 233, 0.25);
+        border-color: #f9e8e9;
+    }
+
+    #newsletter-form button:hover {
+        background-color: white !important;
+        transform: scale(1.05);
+    }
+
+    .payment-methods i {
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+        .payment-methods i:hover {
+            opacity: 1;
+        }
+
+    .developer-credit {
+        position: relative;
+        padding-bottom: 2px;
+    }
+
+        .developer-credit:hover {
+            color: white !important;
+            text-decoration: none !important;
+        }
+
+        .developer-credit::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            bottom: 0;
+            left: 0;
+            background-color: #f9e8e9;
+            transform: scaleX(0);
+            transform-origin: bottom right;
+            transition: transform 0.3s ease;
+        }
+
+        .developer-credit:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+    /* Policy Styles */
+    .policy-header {
+        padding: 8px 0;
+        transition: all 0.3s ease;
+        border-radius: 4px;
+    }
+
+        .policy-header:hover {
+            background-color: rgba(255,255,255,0.05);
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+            .policy-header:hover .policy-arrow {
+                color: white !important;
+            }
+
+    .policy-content .collapse.show + .policy-header .policy-arrow {
+        transform: rotate(180deg);
+    }
+
+    .policy-arrow {
+        font-size: 12px;
+        margin-top: 2px;
+    }
+
+    .policy-content {
+        margin-left: 10px;
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 768px) {
+        .footer-logo
+
+    {
+        text-align: center;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer h5 {
+        margin-top: 1.5rem;
+    }
+
+    .contact-info .d-flex {
+        margin-bottom: 1rem;
+    }
+
+    .policy-content div {
+        font-size: 12px !important;
+    }
+
+    }
+
+    @@media (max-width: 576px) {
+        .footer
+
+    {
+        text-align: center;
+    }
+
+    .footer .list-unstyled {
+        padding-left: 0;
+    }
+
+        .footer .list-unstyled li {
+            justify-content: center;
+        }
+
+    .payment-methods .d-flex {
+        justify-content: center;
+    }
+
+    .btn-social {
+        margin: 0 5px;
+    }
+
+    }
+</style>
+
+<!-- Add Bootstrap JavaScript for collapse functionality -->
+@* <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script> *@
+
+<!-- Custom Policy JavaScript -->
+<script>
+    $(document).ready(function() {
+        // Use a more specific namespace to avoid conflicts
+        $('.policy-header').off('click.policyToggle').on('click.policyToggle', function(e) {
+            var $this = $(this);
+            var targetId = $this.attr('data-target');
+            var $target = $(targetId);
+            var $arrow = $this.find('.policy-arrow');
+
+            // Use Bootstrap's built-in toggle
+            $target.collapse('toggle');
+
+            // Handle arrow rotation after a short delay
+            setTimeout(function() {
+                if ($target.hasClass('show')) {
+                    $arrow.css('transform', 'rotate(180deg)');
+                } else {
+                    $arrow.css('transform', 'rotate(0deg)');
+                }
+            }, 50);
+
+            // Prevent any other click handlers
+            e.stopPropagation();
+        });
+
+        // Listen to Bootstrap collapse events for arrow sync
+        $('.policy-content').on('shown.bs.collapse', function() {
+            var $arrow = $('[data-target="#' + this.id + '"]').find('.policy-arrow');
+            $arrow.css('transform', 'rotate(180deg)');
+        });
+
+        $('.policy-content').on('hidden.bs.collapse', function() {
+            var $arrow = $('[data-target="#' + this.id + '"]').find('.policy-arrow');
+            $arrow.css('transform', 'rotate(0deg)');
+        });
+    });
+</script>
+
+<!-- Load the footer JavaScript -->
+<script src="~/js/footer.js"></script>

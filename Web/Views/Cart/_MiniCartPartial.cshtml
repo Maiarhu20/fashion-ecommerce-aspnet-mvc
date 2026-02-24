@@ -1,0 +1,163 @@
+﻿@model Core.DTOs.Cart.CartDto
+
+<div class="mini-cart p-3">
+    @if (Model == null || !Model.Items.Any())
+    {
+        <div class="empty text-center py-4">
+            <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+            <p class="mb-3 text-muted">Your cart is empty</p>
+            <a asp-controller="Products" asp-action="AllProducts" class="btn btn-mini btn-outline">Shop Now</a>
+        </div>
+    }
+    else
+    {
+        <div class="items">
+            @foreach (var item in Model.Items.Take(3))
+            {
+                <div class="item d-flex align-items-center">
+                    <img src="@item.ProductImageUrl"
+                         alt="@item.ProductName"
+                         class="thumb" />
+                    <div class="info flex-grow-1 ml-2">
+                        <div class="name">
+                            @item.ProductName
+                            @if (!string.IsNullOrEmpty(item.SelectedColor))
+                            {
+                                <span class="color">@item.SelectedColor</span>
+                            }
+                        </div>
+                        <div class="meta text-muted">
+                            @item.Quantity × EGP @item.UnitPrice.ToString("0.00")
+                        </div>
+                    </div>
+                    <div class="lineTotal ml-2">
+                        EGP @item.LineTotal.ToString("0.00")
+                    </div>
+                </div>
+            }
+            @if (Model.Items.Count > 3)
+            {
+                <div class="more text-center small text-muted mt-2">
+                    +@(Model.Items.Count - 3) more item(s)…
+                </div>
+            }
+        </div>
+
+        <div class="summary d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span>Total:</span>
+            <span class="amount">EGP @Model.TotalAmount.ToString("0.00")</span>
+        </div>
+
+        <div class="actions d-flex justify-content-between mt-3">
+            <a asp-controller="Cart" asp-action="Index" class="btn btn-mini btn-outline">View Cart</a>
+            <a href="/checkout" class="btn btn-mini btn-solid">Checkout</a>
+        </div>
+    }
+</div>
+
+<style>
+    :root {
+        --primary: #912356;
+        --primary-dark: #7a1d47;
+        --text-muted: #666;
+        --border-light: #eee;
+        --radius: 5px;
+        --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .mini-cart {
+        max-width: 340px;
+        background: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+        .mini-cart .item {
+            padding: .75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+            .mini-cart .item:last-child {
+                border-bottom: none;
+            }
+
+        .mini-cart .thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: var(--radius);
+        }
+
+        .mini-cart .info .name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .mini-cart .info .color {
+            display: inline-block;
+            margin-left: .5rem;
+            font-size: .75rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border-light);
+            padding: 2px 6px;
+            border-radius: 12px;
+        }
+
+        .mini-cart .info .meta {
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+
+        .mini-cart .lineTotal {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .mini-cart .more {
+            padding: .5rem 0;
+        }
+
+        .mini-cart .summary {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+            .mini-cart .summary .amount {
+                color: var(--primary);
+                font-size: 1.1rem;
+            }
+
+    .btn-mini {
+        font-size: .9rem;
+        padding: .4rem 1rem;
+        border-radius: var(--radius);
+        transition: all .2s;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .btn-solid {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+    }
+
+        .btn-solid:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .empty p {
+        margin-bottom: 1.5rem;
+    }
+</style>

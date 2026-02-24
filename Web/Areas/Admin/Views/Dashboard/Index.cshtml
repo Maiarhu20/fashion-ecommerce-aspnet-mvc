@@ -1,0 +1,147 @@
+﻿@model Web.Areas.Admin.Controllers.DashboardViewModel
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- Admin Dashboard Content -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="jumbotron bg-light p-4 mb-4">
+            <h2 class="display-4">Admin Dashboard</h2>
+            <p class="lead">Welcome to the La Bella administration panel. Manage your store, products, orders, and more from here.</p>
+            <hr class="my-4">
+            <p>Use the menu on the left to navigate through different sections of the admin panel.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Orders
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @(Model.OrderStats?.TotalOrders.ToString() ?? "0")
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Products
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.TotalProducts
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-box-open fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Pending Orders
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @(Model.OrderStats?.PendingOrders.ToString() ?? "0")
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Revenue
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            $@(Model.OrderStats?.TotalRevenue.ToString("N0") ?? "0")
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Add more detailed statistics -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Order Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-muted">Processing</h6>
+                                <h4 class="text-info">@(Model.OrderStats?.ProcessingOrders.ToString() ?? "0")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-muted">Shipped</h6>
+                                <h4 class="text-primary">@(Model.OrderStats?.ShippedOrders.ToString() ?? "0")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-muted">Delivered</h6>
+                                <h4 class="text-success">@(Model.OrderStats?.DeliveredOrders.ToString() ?? "0")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-muted">Cancelled</h6>
+                                <h4 class="text-danger">@(Model.OrderStats?.CancelledOrders.ToString() ?? "0")</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

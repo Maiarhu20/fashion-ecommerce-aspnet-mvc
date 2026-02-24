@@ -1,0 +1,774 @@
+﻿@model IEnumerable<Core.DTOs.Discount.DiscountListDto>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Manage Discount Codes";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    /* ========== PRIMARY COLOR VARIABLES ========== */
+    :root {
+        --primary-color: #912356;
+        --primary-hover: #7a1e48;
+        --primary-light: rgba(145, 35, 86, 0.1);
+        --primary-lighter: rgba(145, 35, 86, 0.05);
+    }
+
+    /* ========== PAGE HEADER ========== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #333;
+        }
+
+    .btn-create {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: beige;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .btn-create:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: beige;
+        }
+
+    /* ========== CARD STYLES ========== */
+    .card-header-custom {
+        background-color: var(--primary-lighter);
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+        .card-header-custom h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+    .btn-stats {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+        .btn-stats:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: beige;
+        }
+
+    /* ========== TABLE STYLES ========== */
+    .table-custom thead {
+        background-color: var(--primary-light);
+    }
+
+        .table-custom thead th {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+    .table-custom tbody td {
+        vertical-align: middle;
+    }
+
+    /* ========== DESKTOP TABLE VIEW ========== */
+    .desktop-table-view {
+        display: block;
+    }
+
+    /* ========== MOBILE CARD VIEW ========== */
+    .mobile-card-view {
+        display: none;
+    }
+
+    .discount-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+        .discount-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+    .discount-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .discount-code {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        word-break: break-all;
+    }
+
+    .discount-code-desc {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
+    .discount-status-badge {
+        flex-shrink: 0;
+        margin-left: 0.5rem;
+    }
+
+    .discount-card-body {
+        margin-bottom: 0.75rem;
+    }
+
+    .discount-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+        .discount-card-row:last-child {
+            border-bottom: none;
+        }
+
+    .discount-card-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+        .discount-card-label i {
+            color: var(--primary-color);
+            width: 16px;
+            text-align: center;
+        }
+
+    .discount-card-value {
+        text-align: right;
+        font-size: 0.85rem;
+        color: #333;
+    }
+
+    .discount-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #eee;
+    }
+
+        .discount-card-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+
+    /* ========== BADGES ========== */
+    .badge-type {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-inactive {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .badge-expired {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-limit {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    /* ========== ACTION BUTTONS ========== */
+    .btn-action-edit {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+        .btn-action-edit:hover {
+            background-color: var(--primary-color);
+            color: beige;
+        }
+
+    .btn-action-toggle {
+        border-color: #ffc107;
+        color: #856404;
+    }
+
+        .btn-action-toggle:hover {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+    .btn-action-delete {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+        .btn-action-delete:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h5 {
+            color: #666;
+        }
+
+        .empty-state p {
+            color: #888;
+        }
+
+    /* ========== RESPONSIVE: LARGE (992px+) ========== */
+    @@media (min-width: 992px) {
+        .desktop-table-view {
+            display: block;
+        }
+
+        .mobile-card-view {
+            display: none;
+        }
+    }
+
+    /* ========== RESPONSIVE: MEDIUM & BELOW (< 992px) ========== */
+    @@media (max-width: 991.98px) {
+        .desktop-table-view {
+            display: none;
+        }
+
+        .mobile-card-view {
+            display: block;
+        }
+
+        .card-header-row {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+            .card-header-row .col-md-6 {
+                width: 100%;
+                text-align: center !important;
+            }
+
+                .card-header-row .col-md-6.text-end {
+                    text-align: center !important;
+                }
+    }
+
+    /* ========== RESPONSIVE: SMALL (< 768px) ========== */
+    @@media (max-width: 767.98px) {
+        .page-header h1 {
+            font-size: 1.4rem;
+        }
+
+        .discount-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .discount-status-badge {
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+
+        .discount-card-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .discount-card-value {
+            text-align: left;
+            width: 100%;
+        }
+
+        .discount-card-actions {
+            flex-direction: column;
+        }
+
+            .discount-card-actions .btn {
+                width: 100%;
+            }
+    }
+
+    /* ========== RESPONSIVE: EXTRA SMALL (< 576px) ========== */
+    @@media (max-width: 575.98px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+
+            .page-header h1 {
+                font-size: 1.25rem;
+                margin-bottom: 0.5rem;
+            }
+
+        .btn-create {
+            width: 100%;
+            justify-content: center;
+        }
+
+            .btn-create .btn-text-full {
+                display: none;
+            }
+
+            .btn-create .btn-text-short {
+                display: inline;
+            }
+
+        .card-header-custom {
+            padding: 0.75rem;
+        }
+
+            .card-header-custom h5 {
+                font-size: 0.95rem;
+            }
+
+        .discount-card {
+            padding: 0.75rem;
+        }
+
+        .discount-code {
+            font-size: 1rem;
+        }
+
+        .discount-card-label {
+            font-size: 0.75rem;
+        }
+
+        .discount-card-value {
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            padding: 2rem 0.5rem;
+        }
+
+            .empty-state i {
+                font-size: 2.5rem;
+            }
+
+            .empty-state h5 {
+                font-size: 1rem;
+            }
+
+            .empty-state p {
+                font-size: 0.85rem;
+            }
+    }
+
+    /* ========== BUTTON TEXT TOGGLE ========== */
+    .btn-text-short {
+        display: none;
+    }
+
+    .btn-text-full {
+        display: inline;
+    }
+
+    @@media (max-width: 575.98px) {
+        .btn-text-short {
+            display: inline;
+        }
+
+        .btn-text-full {
+            display: none;
+        }
+    }
+
+    /* ========== USAGE INFO ========== */
+    .usage-info {
+        font-size: 0.8rem;
+    }
+
+        .usage-info strong {
+            color: var(--primary-color);
+        }
+
+    /* ========== VALUE DISPLAY ========== */
+    .value-amount {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--primary-color);
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header - Responsive -->
+    <div class="page-header">
+        <h1 class="h3">Discount Codes</h1>
+        <a asp-action="Create" class="btn btn-create">
+            <i class="fas fa-plus"></i>
+            <span class="btn-text-full">Create New Discount</span>
+            <span class="btn-text-short">New</span>
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-white card-header-custom py-3">
+            <div class="row card-header-row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tags mr-2"></i>All Discount Codes
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a asp-action="Stats" class="btn btn-stats btn-sm">
+                        <i class="fas fa-chart-bar mr-1"></i>View Stats
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-tag"></i>
+                    <h5>No Discount Codes Found</h5>
+                    <p>Get started by creating your first discount code.</p>
+                    <a asp-action="Create" class="btn btn-create mt-2">
+                        <i class="fas fa-plus mr-2"></i>Create Discount
+                    </a>
+                </div>
+            }
+            else
+            {
+                <!-- Desktop Table View -->
+                <div class="desktop-table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                    <th>Usage</th>
+                                    <th>Status</th>
+                                    <th>Start Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var discount in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong style="color: var(--primary-color);">@discount.Code</strong>
+                                            @if (!string.IsNullOrEmpty(discount.Description))
+                                            {
+                                                <div class="text-muted small">@discount.Description</div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-type">@discount.DiscountType</span>
+                                        </td>
+                                        <td>
+                                            <span class="value-amount">
+                                                @if (discount.DiscountType == "Percentage")
+                                                {
+                                                    @($"{discount.DiscountValue}%")
+                                                }
+                                                else
+                                                {
+                                                    @($"${discount.DiscountValue:F2}")
+                                                }
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="usage-info">
+                                                <strong>@discount.TotalUsageCount</strong> total uses
+                                                @if (discount.UsageLimitPerGuest.HasValue)
+                                                {
+                                                    <div class="text-info small">
+                                                        <i class="fas fa-user"></i> Max @discount.UsageLimitPerGuest per guest
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-muted small">Unlimited per guest</div>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (discount.IsCurrentlyActive)
+                                            {
+                                                <span class="badge badge-active">Active</span>
+                                            }
+                                            else if (!discount.IsActive)
+                                            {
+                                                <span class="badge badge-inactive">Inactive</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-expired">Expired</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small>@discount.StartDate.ToString("yyyy-MM-dd")</small>
+                                        </td>
+                                        <td>
+                                            @if (discount.ExpiryDate.HasValue)
+                                            {
+                                                <small>@discount.ExpiryDate.Value.ToString("yyyy-MM-dd")</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">No expiry</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a asp-action="Edit" asp-route-id="@discount.Id"
+                                                   class="btn btn-action-edit" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form asp-action="ToggleStatus" asp-route-id="@discount.Id"
+                                                      method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-action-toggle"
+                                                            title="@(discount.IsActive ? "Deactivate" : "Activate")">
+                                                        @if (discount.IsActive)
+                                                        {
+                                                            <i class="fas fa-toggle-on"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-toggle-off"></i>
+                                                        }
+                                                    </button>
+                                                </form>
+                                                <form asp-action="Delete" asp-route-id="@discount.Id"
+                                                      method="post" class="d-inline"
+                                                      onsubmit="return confirm('Are you sure you want to delete this discount?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-action-delete" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="mobile-card-view p-3">
+                    @foreach (var discount in Model)
+                    {
+                        <div class="discount-card">
+                            <div class="discount-card-header">
+                                <div>
+                                    <div class="discount-code">@discount.Code</div>
+                                    @if (!string.IsNullOrEmpty(discount.Description))
+                                    {
+                                        <div class="discount-code-desc">@discount.Description</div>
+                                    }
+                                </div>
+                                <div class="discount-status-badge">
+                                    @if (discount.IsCurrentlyActive)
+                                    {
+                                        <span class="badge badge-active">Active</span>
+                                    }
+                                    else if (!discount.IsActive)
+                                    {
+                                        <span class="badge badge-inactive">Inactive</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-expired">Expired</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="discount-card-body">
+                                <div class="discount-card-row">
+                                    <span class="discount-card-label">
+                                        <i class="fas fa-tag"></i>Type
+                                    </span>
+                                    <span class="discount-card-value">
+                                        <span class="badge badge-type">@discount.DiscountType</span>
+                                    </span>
+                                </div>
+                                <div class="discount-card-row">
+                                    <span class="discount-card-label">
+                                        <i class="fas fa-dollar-sign"></i>Value
+                                    </span>
+                                    <span class="discount-card-value value-amount">
+                                        @if (discount.DiscountType == "Percentage")
+                                        {
+                                            @($"{discount.DiscountValue}%")
+                                        }
+                                        else
+                                        {
+                                            @($"${discount.DiscountValue:F2}")
+                                        }
+                                    </span>
+                                </div>
+                                <div class="discount-card-row">
+                                    <span class="discount-card-label">
+                                        <i class="fas fa-users"></i>Usage
+                                    </span>
+                                    <span class="discount-card-value">
+                                        <strong>@discount.TotalUsageCount</strong> uses
+                                        @if (discount.UsageLimitPerGuest.HasValue)
+                                        {
+                                            <div class="text-info small">
+                                                Max @discount.UsageLimitPerGuest/guest
+                                            </div>
+                                        }
+                                    </span>
+                                </div>
+                                <div class="discount-card-row">
+                                    <span class="discount-card-label">
+                                        <i class="fas fa-calendar-alt"></i>Start
+                                    </span>
+                                    <span class="discount-card-value">
+                                        @discount.StartDate.ToString("MMM dd, yyyy")
+                                    </span>
+                                </div>
+                                <div class="discount-card-row">
+                                    <span class="discount-card-label">
+                                        <i class="fas fa-calendar-times"></i>Expiry
+                                    </span>
+                                    <span class="discount-card-value">
+                                        @if (discount.ExpiryDate.HasValue)
+                                        {
+                                            @discount.ExpiryDate.Value.ToString("MMM dd, yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No expiry</span>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="discount-card-actions">
+                                <a asp-action="Edit" asp-route-id="@discount.Id"
+                                   class="btn btn-sm btn-action-edit">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Edit</span>
+                                </a>
+                                <form asp-action="ToggleStatus" asp-route-id="@discount.Id"
+                                      method="post" class="d-inline flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-action-toggle w-100">
+                                        @if (discount.IsActive)
+                                        {
+                                            <i class="fas fa-toggle-on"></i>
+                                            <span>Deactivate</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-toggle-off"></i>
+                                            <span>Activate</span>
+                                        }
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@discount.Id"
+                                      method="post" class="d-inline flex-fill"
+                                      onsubmit="return confirm('Are you sure you want to delete this discount?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-action-delete w-100">
+                                        <i class="fas fa-trash"></i>
+                                        <span>Delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+
+            // Initialize tooltips
+            $('[title]').tooltip({
+                placement: 'top',
+                trigger: 'hover'
+            });
+        });
+    </script>
+}

@@ -1,0 +1,1070 @@
+﻿@model Core.DTOs.Checkout.OrderConfirmationDto
+@{
+    ViewData["Title"] = "Order Confirmation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var primaryColor = "#912356";
+    var isCOD = Model.PaymentMethod == Domain.Models.PaymentMethod.CashOnDelivery;
+    var depositAmount = Model.GrandTotal * 0.5m;
+    var depositAccountNumber = "***********";
+    var depositAccountName = "#####";
+    var whatsappNumber = "************";
+    var whatsappMessage = $"Hello, I want to send my deposit screenshot for Order #{Model.OrderNumber}. Deposit Amount: EGP {depositAmount:N2}";
+    var whatsappUrl = $"https://wa.me/{whatsappNumber}?text={Uri.EscapeDataString(whatsappMessage)}";
+}
+
+<div class="confirmation-container">
+    <!-- Success Header -->
+    <div class="success-header">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <h1>Order Confirmed!</h1>
+        <p class="order-number">Order #@Model.OrderNumber</p>
+    </div>
+
+    <!-- COD Deposit Required Card -->
+    @if (isCOD)
+    {
+        <div class="deposit-card">
+            <div class="deposit-header">
+                <div class="deposit-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>⚠️ Deposit Required / مطلوب عربون</h3>
+            </div>
+            <div class="deposit-body">
+                <!-- Deposit Amount Box -->
+                <div class="deposit-amount-box">
+                    <div class="amount-label">Deposit Amount (50%) / قيمة العربون</div>
+                    <div class="amount-value">EGP @depositAmount.ToString("N2")</div>
+                    <div class="amount-arabic">@depositAmount.ToString("N2") جنيه مصري</div>
+                </div>
+
+                <!-- Bank Account Details -->
+                <div class="bank-account-card">
+                    <div class="bank-header">
+                        <i class="fas fa-university"></i>
+                        <span>Transfer Deposit To / حول العربون إلى</span>
+                    </div>
+                    <div class="bank-details">
+                        <div class="bank-detail-row">
+                            <div class="bank-label">
+                                <i class="fas fa-user"></i>
+                                <span>Account Name / اسم الحساب:</span>
+                            </div>
+                            <div class="bank-value">
+                                <strong>@depositAccountName</strong>
+                                <button class="copy-btn" onclick="copyToClipboard('@depositAccountName', this)" title="Copy">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bank-detail-row">
+                            <div class="bank-label">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span>Account Number / رقم الحساب:</span>
+                            </div>
+                            <div class="bank-value">
+                                <strong class="account-number">@depositAccountNumber</strong>
+                                <button class="copy-btn" onclick="copyToClipboard('@depositAccountNumber', this)" title="Copy">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bank-detail-row">
+                            <div class="bank-label">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Amount / المبلغ:</span>
+                            </div>
+                            <div class="bank-value">
+                                <strong class="deposit-highlight">EGP @depositAmount.ToString("N2")</strong>
+                                <button class="copy-btn" onclick="copyToClipboard('@depositAmount.ToString("N2")', this)" title="Copy">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bank-note">
+                        <i class="fas fa-info-circle"></i>
+                        <span>
+                            You can transfer via Instapay, Vodafone Cash, or any bank transfer
+                            <br>
+                            يمكنك التحويل عبر انستاباي أو فودافون كاش أو أي تحويل بنكي
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="deposit-instructions">
+                    <div class="instruction-section english">
+                        <h5><i class="fas fa-info-circle me-2"></i>Important Instructions:</h5>
+                        <ol>
+                            <li>Your order <strong>will NOT be processed</strong> until we receive the 50% deposit.</li>
+                            <li>Transfer <strong>EGP @depositAmount.ToString("N2")</strong> to account: <strong>@depositAccountNumber</strong> (Heba Sabry)</li>
+                            <li>Take a screenshot of the payment confirmation.</li>
+                            <li>Send the screenshot via WhatsApp using the button below.</li>
+                            <li>Once we verify your deposit, we will start processing your order.</li>
+                        </ol>
+                    </div>
+
+                    <div class="instruction-divider"></div>
+
+                    <div class="instruction-section arabic">
+                        <h5><i class="fas fa-info-circle ms-2"></i>تعليمات هامة:</h5>
+                        <ol>
+                            <li>لن يتم معالجة طلبك <strong>حتى نستلم العربون (50%)</strong>.</li>
+                            <li>حول <strong>@depositAmount.ToString("N2") جنيه</strong> إلى حساب: <strong>@depositAccountNumber</strong> (هبة صبري)</li>
+                            <li>قم بأخذ لقطة شاشة لتأكيد الدفع.</li>
+                            <li>أرسل لقطة الشاشة عبر الواتساب باستخدام الزر أدناه.</li>
+                            <li>بمجرد التحقق من العربون، سنبدأ في معالجة طلبك.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Button -->
+                <div class="deposit-action">
+                    <a href="@whatsappUrl" target="_blank" class="btn-whatsapp">
+                        <i class="fab fa-whatsapp me-2"></i>
+                        Send Deposit Screenshot / أرسل صورة العربون
+                    </a>
+                    <p class="whatsapp-note">
+                        <i class="fas fa-phone-alt me-1"></i>
+                        WhatsApp: +20 @whatsappNumber.Substring(2, 3) @whatsappNumber.Substring(5, 4) @whatsappNumber.Substring(9)
+                    </p>
+                </div>
+
+                <!-- Warning Note -->
+                <div class="deposit-warning-note">
+                    <i class="fas fa-clock me-2"></i>
+                    <span>
+                        <strong>Note:</strong> Orders without deposit confirmation will be automatically cancelled after 24 hours.
+                        <br>
+                        <strong>ملاحظة:</strong> سيتم إلغاء الطلبات بدون تأكيد العربون تلقائياً بعد 24 ساعة.
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Order Details -->
+        <div class="col-lg-8">
+            <div class="confirmation-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-receipt me-2"></i>Order Details</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6 class="detail-title">Order Information</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Order Date:</span>
+                                <span class="detail-value">@Model.OrderDate.ToString("MMMM dd, yyyy h:mm tt")</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Customer Name:</span>
+                                <span class="detail-value">@Model.CustomerName</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value">@Model.CustomerPhone</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value">@Model.CustomerEmail</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Payment Method:</span>
+                                <span class="detail-value payment-badge @(isCOD ? "cod" : "paid")">
+                                    @if (isCOD)
+                                    {
+                                        <i class="fas fa-money-bill-wave me-1"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-check-circle me-1"></i>
+                                    }
+                                    @Model.PaymentMethod
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <h6 class="detail-title">Shipping Address</h6>
+                            <div class="address-box">
+                                <p class="mb-1"><strong>@Model.CustomerName</strong></p>
+                                <p class="mb-1">@Model.ShippingAddress</p>
+                                <p class="mb-1">@Model.ShippingCity</p>
+                                <p class="mb-1">@Model.CustomerPhone</p>
+                                <p class="mb-0">@Model.CustomerEmail</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="confirmation-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-shopping-bag me-2"></i>Order Items</h5>
+                </div>
+                <div class="card-body-custom p-0">
+                    <div class="table-responsive">
+                        <table class="order-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Color</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td class="product-name">@item.ProductName</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.SelectedColor))
+                                            {
+                                                <span class="color-badge">@item.SelectedColor</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>@item.Quantity</td>
+                                        <td>EGP @item.UnitPrice.ToString("N2")</td>
+                                        <td class="item-total">EGP @item.LineTotal.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="confirmation-card summary-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-calculator me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>EGP @Model.CartTotal.ToString("N2")</span>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="summary-row discount">
+                            <span><i class="fas fa-tag me-1"></i>Discount</span>
+                            <span>-EGP @Model.DiscountAmount.ToString("N2")</span>
+                        </div>
+                    }
+                    <div class="summary-row">
+                        <span><i class="fas fa-truck me-1"></i>Shipping</span>
+                        <span>EGP @Model.ShippingCost.ToString("N2")</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row grand-total">
+                        <span>Grand Total</span>
+                        <span>EGP @Model.GrandTotal.ToString("N2")</span>
+                    </div>
+
+                    @if (isCOD)
+                    {
+                        <div class="summary-divider"></div>
+                        <div class="summary-row deposit">
+                            <span>💰 Deposit (50%)</span>
+                            <span>EGP @depositAmount.ToString("N2")</span>
+                        </div>
+                        <div class="summary-row remaining">
+                            <span>🚚 Pay on Delivery</span>
+                            <span>EGP @((Model.GrandTotal - depositAmount).ToString("N2"))</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- What's Next -->
+            <div class="confirmation-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-clipboard-list me-2"></i>What's Next?</h5>
+                </div>
+                <div class="card-body-custom">
+                    <ul class="next-steps-list">
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>You will receive an email confirmation shortly</span>
+                        </li>
+                        @if (isCOD)
+                        {
+                            <li class="highlight">
+                                <i class="fas fa-hand-holding-usd"></i>
+                                <span>Transfer 50% deposit to <strong>@depositAccountNumber</strong> and send screenshot via WhatsApp</span>
+                            </li>
+                        }
+                        <li>
+                            <i class="fas fa-shipping-fast"></i>
+                            <span>We will contact you when your order ships</span>
+                        </li>
+                        @if (isCOD)
+                        {
+                            <li>
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Have the remaining amount (EGP @((Model.GrandTotal - depositAmount).ToString("N2"))) ready on delivery</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="@Url.Action("Index", "Home")" class="btn-primary-custom">
+                    <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                </a>
+                @* <a href="@Url.Action("Index", "OrderTracking")" class="btn-secondary-custom">
+                    <i class="fas fa-search me-2"></i>Track Your Order
+                </a> *@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast for copy notification -->
+<div class="copy-toast" id="copyToast">
+    <i class="fas fa-check-circle me-2"></i>
+    <span>Copied to clipboard!</span>
+</div>
+
+<style>
+    :root {
+        --primary: #912356;
+        --primary-dark: #7a1d47;
+        --primary-light: #f9e8e9;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-600: #6c757d;
+        --white: #ffffff;
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --radius: 12px;
+    }
+
+    .confirmation-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px 40px;
+    }
+
+    /* Success Header */
+    .success-header {
+        text-align: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, var(--success) 0%, #1e7e34 100%);
+        border-radius: var(--radius);
+        color: var(--white);
+        margin-bottom: 30px;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2.5rem;
+    }
+
+    .success-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .order-number {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        background: rgba(255, 255, 255, 0.2);
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 20px;
+    }
+
+    /* Deposit Card */
+    .deposit-card {
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        border: 3px solid var(--warning);
+        border-radius: var(--radius);
+        margin-bottom: 30px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+
+    .deposit-header {
+        background: var(--warning);
+        color: #333;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .deposit-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--warning);
+        flex-shrink: 0;
+    }
+
+    .deposit-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .deposit-body {
+        padding: 25px;
+    }
+
+    .deposit-amount-box {
+        background: var(--white);
+        border-radius: var(--radius);
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 25px;
+        border: 2px solid #c9a227;
+    }
+
+    .amount-label {
+        font-size: 0.95rem;
+        color: var(--gray-600);
+        margin-bottom: 10px;
+    }
+
+    .amount-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .amount-arabic {
+        font-size: 1.2rem;
+        color: var(--gray-600);
+        direction: rtl;
+        margin-top: 5px;
+    }
+
+    /* Bank Account Card */
+    .bank-account-card {
+        background: var(--white);
+        border-radius: var(--radius);
+        margin-bottom: 25px;
+        overflow: hidden;
+        border: 2px solid var(--primary);
+        box-shadow: 0 4px 15px rgba(145, 35, 86, 0.15);
+    }
+
+    .bank-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+        .bank-header i {
+            font-size: 1.3rem;
+        }
+
+    .bank-details {
+        padding: 20px;
+    }
+
+    .bank-detail-row {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 15px;
+        background: var(--gray-100);
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+        .bank-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+    .bank-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gray-600);
+        font-size: 0.9rem;
+    }
+
+        .bank-label i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+    .bank-value {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 5px;
+    }
+
+        .bank-value strong {
+            font-size: 1.2rem;
+            color: #333;
+            letter-spacing: 1px;
+        }
+
+        .bank-value .account-number {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .bank-value .deposit-highlight {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+    .copy-btn {
+        background: var(--primary-light);
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--primary);
+        transition: all 0.2s ease;
+    }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+            color: var(--white);
+        }
+
+    .bank-note {
+        background: #e3f2fd;
+        padding: 12px 15px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: #1565c0;
+        border-top: 1px solid #bbdefb;
+    }
+
+        .bank-note i {
+            margin-top: 2px;
+        }
+
+    /* Copy Toast */
+    .copy-toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--success);
+        color: var(--white);
+        padding: 12px 25px;
+        border-radius: 50px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+
+        .copy-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+    .deposit-instructions {
+        background: var(--white);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .instruction-section h5 {
+        color: var(--primary);
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    .instruction-section ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+        .instruction-section ol li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+    .instruction-section.arabic {
+        direction: rtl;
+        text-align: right;
+    }
+
+        .instruction-section.arabic ol {
+            padding-left: 0;
+            padding-right: 20px;
+        }
+
+    .instruction-divider {
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--gray-200), transparent);
+        margin: 20px 0;
+    }
+
+    .deposit-action {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .btn-whatsapp {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: #25d366;
+        color: var(--white);
+        border: none;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 400px;
+    }
+
+        .btn-whatsapp:hover {
+            background: #1da851;
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+        }
+
+    .whatsapp-note {
+        margin-top: 10px;
+        color: var(--gray-600);
+        font-size: 0.9rem;
+    }
+
+    .deposit-warning-note {
+        background: #fff3cd;
+        border: 1px solid #c9a227;
+        border-radius: var(--radius);
+        padding: 15px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.9rem;
+    }
+
+        .deposit-warning-note i {
+            color: var(--warning);
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+
+    /* Confirmation Cards */
+    .confirmation-card {
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        padding: 15px 20px;
+    }
+
+        .card-header-custom h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+    .card-body-custom {
+        padding: 20px;
+    }
+
+    .detail-title {
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--primary-light);
+    }
+
+    .detail-item {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: var(--gray-600);
+        min-width: 130px;
+    }
+
+    .detail-value {
+        color: #333;
+    }
+
+    .payment-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+        .payment-badge.cod {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .payment-badge.paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+    .address-box {
+        background: var(--gray-100);
+        padding: 15px;
+        border-radius: var(--radius);
+        border-left: 4px solid var(--primary);
+    }
+
+    /* Order Items Table */
+    .order-items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .order-items-table th,
+        .order-items-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .order-items-table th {
+            background: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+    .product-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .color-badge {
+        background: var(--primary-light);
+        color: var(--primary);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+    }
+
+    .item-total {
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* Summary Card */
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+    }
+
+        .summary-row.discount {
+            color: var(--success);
+        }
+
+        .summary-row.deposit {
+            background: #fff3cd;
+            margin: 0 -20px;
+            padding: 10px 20px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .summary-row.remaining {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+    .summary-divider {
+        height: 1px;
+        background: var(--gray-200);
+        margin: 10px 0;
+    }
+
+    .summary-row.grand-total {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary);
+        padding-top: 15px;
+    }
+
+    /* Next Steps */
+    .next-steps-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .next-steps-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+            .next-steps-list li:last-child {
+                border-bottom: none;
+            }
+
+            .next-steps-list li i {
+                color: var(--primary);
+                font-size: 1.1rem;
+                margin-top: 2px;
+            }
+
+            .next-steps-list li.highlight {
+                background: #fff3cd;
+                margin: 0 -20px;
+                padding: 12px 20px;
+                border-radius: 0;
+            }
+
+                .next-steps-list li.highlight i {
+                    color: #856404;
+                }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-primary-custom,
+    .btn-secondary-custom {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 20px;
+        font-weight: 600;
+        border-radius: var(--radius);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+    }
+
+        .btn-primary-custom:hover {
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(145, 35, 86, 0.3);
+        }
+
+    .btn-secondary-custom {
+        background: var(--white);
+        color: var(--primary);
+        border: 2px solid var(--primary);
+    }
+
+        .btn-secondary-custom:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+    /* Responsive */
+    @@media (max-width: 991.98px) {
+        .bank-value strong {
+            font-size: 1.1rem;
+        }
+
+        .bank-value .account-number {
+            font-size: 1.2rem;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .confirmation-container {
+            padding: 15px 10px 30px;
+        }
+
+        .success-header {
+            padding: 30px 15px;
+        }
+
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+        }
+
+        .success-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .deposit-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+            .deposit-header h3 {
+                font-size: 1.1rem;
+            }
+
+        .deposit-body {
+            padding: 15px;
+        }
+
+        .amount-value {
+            font-size: 2rem;
+        }
+
+        .bank-header {
+            font-size: 0.9rem;
+            padding: 12px 15px;
+        }
+
+        .bank-details {
+            padding: 15px;
+        }
+
+        .bank-detail-row {
+            padding: 12px;
+        }
+
+        .bank-value strong {
+            font-size: 1rem;
+        }
+
+        .bank-value .account-number {
+            font-size: 1.1rem;
+        }
+
+        .copy-btn {
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-whatsapp {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1rem;
+        }
+
+        .order-items-table th,
+        .order-items-table td {
+            padding: 10px 8px;
+            font-size: 0.85rem;
+        }
+
+        .detail-item {
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .detail-label {
+            min-width: auto;
+            font-size: 0.85rem;
+        }
+
+        .instruction-section ol {
+            padding-left: 15px;
+            font-size: 0.9rem;
+        }
+
+        .instruction-section.arabic ol {
+            padding-right: 15px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .bank-value {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .copy-btn {
+            align-self: flex-end;
+        }
+    }
+</style>
+
+<script>
+    function copyToClipboard(text, button) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show success state on button
+            button.classList.add('copied');
+            button.innerHTML = '<i class="fas fa-check"></i>';
+
+            // Show toast
+            const toast = document.getElementById('copyToast');
+            toast.classList.add('show');
+
+            // Reset after 2 seconds
+            setTimeout(function() {
+                button.classList.remove('copied');
+                button.innerHTML = '<i class="fas fa-copy"></i>';
+                toast.classList.remove('show');
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+            alert('Failed to copy. Please copy manually.');
+        });
+    }
+</script>

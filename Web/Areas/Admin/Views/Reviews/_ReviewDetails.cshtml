@@ -1,0 +1,618 @@
+﻿@model Core.DTOs.Reviews.ReviewResponseDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var primaryColor = "#912356";
+}
+
+<style>
+    /* ========== PRIMARY COLOR VARIABLES ========== */
+    :root {
+        --primary-color: #912356;
+        --primary-hover: #7a1e48;
+        --primary-light: rgba(145, 35, 86, 0.1);
+        --primary-lighter: rgba(145, 35, 86, 0.05);
+    }
+
+    /* ========== REVIEW CONTAINER ========== */
+    .review-container {
+        padding: 1rem;
+    }
+
+    /* ========== REVIEW HEADER ========== */
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-light);
+    }
+
+    .review-header-left h4 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+    }
+
+    .rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+        .rating-stars i {
+            color: #ffc107;
+            font-size: 1.1rem;
+        }
+
+            .rating-stars i.empty {
+                color: #ddd;
+            }
+
+    .rating-text {
+        margin-left: 0.5rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* ========== STATUS BADGE ========== */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffc107;
+    }
+
+    .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #28a745;
+    }
+
+    .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #dc3545;
+    }
+
+    /* ========== CARD STYLES ========== */
+    .review-card {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .review-card-header {
+        background-color: var(--primary-lighter);
+        border-bottom: 2px solid var(--primary-color);
+        padding: 0.875rem 1.25rem;
+    }
+
+        .review-card-header h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+    .review-card-body {
+        padding: 1.25rem;
+    }
+
+    /* ========== INFO ITEMS ========== */
+    .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -0.75rem;
+    }
+
+    .info-col {
+        flex: 1;
+        min-width: 250px;
+        padding: 0 0.75rem;
+    }
+
+    .info-item {
+        margin-bottom: 1rem;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+        .info-label i {
+            width: 18px;
+            text-align: center;
+        }
+
+    .info-value {
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+        .info-value a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+            .info-value a:hover {
+                color: var(--primary-hover);
+                text-decoration: underline;
+            }
+
+    /* ========== CONTENT BOX ========== */
+    .content-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        border-left: 4px solid var(--primary-color);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #444;
+    }
+
+        .content-box.large {
+            min-height: 100px;
+        }
+
+    .no-content {
+        color: #888;
+        font-style: italic;
+    }
+
+    /* ========== ACTION BUTTONS ========== */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background-color: var(--primary-lighter);
+        border-radius: 10px;
+        margin-top: 1rem;
+    }
+
+    .btn-action {
+        padding: 0.6rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        min-width: 120px;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-approve {
+        background-color: #28a745;
+        color: white;
+    }
+
+        .btn-approve:hover {
+            background-color: #218838;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+    .btn-reject {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-reject:hover {
+            background-color: #c82333;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+    /* ========== ALERT STYLES ========== */
+    .alert-not-found {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+        .alert-not-found i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+    /* ========== DESKTOP VIEW - Default visible ========== */
+    .desktop-info-view {
+        display: block;
+    }
+
+    /* ========== MOBILE VIEW - Default hidden ========== */
+    .mobile-info-view {
+        display: none;
+    }
+
+    .mobile-info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .mobile-info-item:last-child {
+            border-bottom: none;
+        }
+
+    .mobile-info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    .mobile-info-value {
+        text-align: right;
+        color: #333;
+        font-size: 0.85rem;
+        word-break: break-word;
+        max-width: 60%;
+    }
+
+    /* ========== RESPONSIVE: TABLET & BELOW (< 768px) ========== */
+    @@media (max-width: 767.98px) {
+        .review-container {
+            padding: 0.75rem;
+        }
+
+        .review-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .review-header-left h4 {
+            font-size: 1.1rem;
+        }
+
+        .rating-stars i {
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            margin-top: 0.5rem;
+        }
+        /* HIDE desktop, SHOW mobile */
+        .desktop-info-view {
+            display: none !important;
+        }
+
+        .mobile-info-view {
+            display: block !important;
+        }
+
+        .review-card-body {
+            padding: 1rem;
+        }
+
+        .content-box {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+            .content-box.large {
+                min-height: 80px;
+            }
+
+        .action-buttons {
+            flex-direction: column;
+            padding: 0.75rem;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    /* ========== RESPONSIVE: MOBILE (< 576px) ========== */
+    @@media (max-width: 575.98px) {
+        .review-container {
+            padding: 0.5rem;
+        }
+
+        .review-header-left h4 {
+            font-size: 1rem;
+        }
+
+        .rating-stars i {
+            font-size: 0.9rem;
+        }
+
+        .rating-text {
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .review-card-header {
+            padding: 0.75rem 1rem;
+        }
+
+            .review-card-header h5 {
+                font-size: 0.9rem;
+            }
+
+        .review-card-body {
+            padding: 0.75rem;
+        }
+
+        .mobile-info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .mobile-info-value {
+            text-align: left;
+            max-width: 100%;
+        }
+
+        .mobile-info-label {
+            font-size: 0.75rem;
+        }
+
+        .mobile-info-value {
+            font-size: 0.85rem;
+        }
+
+        .content-box {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+@if (Model == null)
+{
+    <div class="alert-not-found">
+        <i class="fa fa-exclamation-triangle"></i>
+        <strong>Review not found</strong>
+        <p class="mb-0 mt-2">The review could not be loaded. Please try again.</p>
+    </div>
+}
+else
+{
+    <div class="review-container">
+        <!-- Review Header -->
+        <div class="review-header">
+            <div class="review-header-left">
+                <h4><i class="fa fa-comment mr-2"></i>Review #@Model.Id</h4>
+                <div class="rating-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Model.Rating)
+                        {
+                            <i class="fa fa-star"></i>
+                        }
+                        else
+                        {
+                            <i class="fa fa-star-o empty"></i>
+                        }
+                    }
+                    <span class="rating-text">(@Model.Rating out of 5)</span>
+                </div>
+            </div>
+            <span class="status-badge @(Model.Status == "Pending" ? "status-pending" : Model.Status == "Approved" ? "status-approved" : "status-rejected")">
+                @if (Model.Status == "Pending")
+                {
+                    <i class="fa fa-clock-o"></i>
+                }
+                else if (Model.Status == "Approved")
+                {
+                    <i class="fa fa-check-circle"></i>
+                }
+                else
+                {
+                    <i class="fa fa-times-circle"></i>
+                }
+                @Model.Status
+            </span>
+        </div>
+
+        <!-- Review Details Card -->
+        <div class="review-card">
+            <div class="review-card-header">
+                <h5><i class="fa fa-info-circle"></i>Review Information</h5>
+            </div>
+            <div class="review-card-body">
+
+                <!-- ========== DESKTOP VIEW (768px+) ========== -->
+                <div class="desktop-info-view">
+                    <div class="info-row">
+                        <div class="info-col">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fa fa-shopping-bag"></i>Product
+                                </div>
+                                <div class="info-value">
+                                    <a href="@Url.Action("Details", "Products", new { area = "", id = Model.ProductId })" target="_blank">
+                                        @Model.ProductName
+                                        <i class="fa fa-external-link ml-1" style="font-size: 0.8rem;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fa fa-user"></i>Guest Name
+                                </div>
+                                <div class="info-value">@Model.GuestName</div>
+                            </div>
+                        </div>
+                        <div class="info-col">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fa fa-envelope"></i>Guest Email
+                                </div>
+                                <div class="info-value">
+                                    <a href="mailto:@Model.GuestEmail">@Model.GuestEmail</a>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fa fa-calendar"></i>Submitted On
+                                </div>
+                                <div class="info-value">@Model.CreatedDate.ToString("MMMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== MOBILE VIEW (<768px) ========== -->
+                <div class="mobile-info-view">
+                    <div class="mobile-info-item">
+                        <span class="mobile-info-label">
+                            <i class="fa fa-shopping-bag"></i>Product
+                        </span>
+                        <span class="mobile-info-value">
+                            <a href="@Url.Action("Details", "Products", new { area = "", id = Model.ProductId })" target="_blank">
+                                @Model.ProductName
+                            </a>
+                        </span>
+                    </div>
+                    <div class="mobile-info-item">
+                        <span class="mobile-info-label">
+                            <i class="fa fa-user"></i>Guest Name
+                        </span>
+                        <span class="mobile-info-value">@Model.GuestName</span>
+                    </div>
+                    <div class="mobile-info-item">
+                        <span class="mobile-info-label">
+                            <i class="fa fa-envelope"></i>Email
+                        </span>
+                        <span class="mobile-info-value">
+                            <a href="mailto:@Model.GuestEmail">@Model.GuestEmail</a>
+                        </span>
+                    </div>
+                    <div class="mobile-info-item">
+                        <span class="mobile-info-label">
+                            <i class="fa fa-calendar"></i>Submitted
+                        </span>
+                        <span class="mobile-info-value">@Model.CreatedDate.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+
+                <!-- Review Title (Shared - Always visible) -->
+                <div class="info-item mt-3">
+                    <div class="info-label">
+                        <i class="fa fa-heading"></i>Review Title
+                    </div>
+                    <div class="content-box mt-2">
+                        @if (string.IsNullOrEmpty(Model.Title))
+                        {
+                            <span class="no-content">No title provided</span>
+                        }
+                        else
+                        {
+                            @Model.Title
+                        }
+                    </div>
+                </div>
+
+                <!-- Review Comment (Shared - Always visible) -->
+                <div class="info-item mt-3">
+                    <div class="info-label">
+                        <i class="fa fa-comment"></i>Review Comment
+                    </div>
+                    <div class="content-box large mt-2">
+                        @if (string.IsNullOrEmpty(Model.Comment))
+                        {
+                            <span class="no-content">No comment provided</span>
+                        }
+                        else
+                        {
+                            @Model.Comment
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            @if (Model.Status == "Pending")
+            {
+                <button type="button" class="btn btn-action btn-approve"
+                        onclick="updateStatusFromModal(@Model.Id, 'Approved')">
+                    <i class="fa fa-check"></i>
+                    <span>Approve</span>
+                </button>
+                <button type="button" class="btn btn-action btn-reject"
+                        onclick="updateStatusFromModal(@Model.Id, 'Rejected')">
+                    <i class="fa fa-times"></i>
+                    <span>Reject</span>
+                </button>
+            }
+            @* else if (Model.Status == "Approved")
+            {
+                <button type="button" class="btn btn-action btn-reject"
+                        onclick="updateStatusFromModal(@Model.Id, 'Rejected')">
+                    <i class="fa fa-times"></i>
+                    <span>Reject Review</span>
+                </button>
+            }
+            else if (Model.Status == "Rejected")
+            {
+                <button type="button" class="btn btn-action btn-approve"
+                        onclick="updateStatusFromModal(@Model.Id, 'Approved')">
+                    <i class="fa fa-check"></i>
+                    <span>Approve Review</span>
+                </button>
+            } *@
+        </div>
+    </div>
+
+    <script>
+        function updateStatusFromModal(reviewId, status) {
+            $('#reviewModal').modal('hide');
+            window.updateStatus(reviewId, status);
+        }
+    </script>
+}

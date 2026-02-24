@@ -1,0 +1,503 @@
+﻿@model IEnumerable<Core.DTOs.HomeMedia.HomeMediaListDto>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Media Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    // Define your brand color here for easy reference in Razor logic if needed
+    var brandColor = "#912356";
+}
+
+<div class="container-fluid px-3 px-md-4">
+    <!-- Header: Stacks vertically on mobile, horizontal on desktop -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <div class="text-center text-md-left mb-3 mb-md-0">
+            <h1 class="h3 mb-1 text-gray-800 font-weight-bold">Home Media Management</h1>
+            <p class="text-muted mb-0">Manage homepage images and videos</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary btn-create" style="background-color: #912356; border-color: #912356; color:beige">
+            <i class="fas fa-plus-circle mr-2"></i> Add New Item
+        </a>
+    </div>
+
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-left-brand" role="alert">
+            <i class="fas fa-check-circle mr-2 text-brand"></i> @TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i> @TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Stats Cards: 2 per row on mobile, 4 per row on desktop -->
+    <div class="row mb-4">
+        <div class="col-6 col-xl-3 col-md-6 mb-3 mb-md-4">
+            <div class="card border-left-brand shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-brand text-uppercase mb-1">Total</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count()</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-images fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3 col-md-6 mb-3 mb-md-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(m => m.IsActive)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3 col-md-6 mb-3 mb-md-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Images</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(m => m.MediaType == "Image")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-image fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3 col-md-6 mb-3 mb-md-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Videos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(m => m.MediaType == "Video")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-video fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content: Responsive Table -->
+    <div class="card shadow border-0 mb-5">
+        <div class="card-header bg-brand text-white py-3 d-flex align-items-center">
+            <i class="fas fa-list mr-2"></i>
+            <h5 class="mb-0">Home Media Items</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive-wrapper">
+                <table class="table table-hover mb-0 mobile-card-view">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 80px;">Order</th>
+                            <th style="width: 120px;">Media</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                            <th class="text-center" style="width: 160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var media in Model.OrderBy(m => m.DisplayOrder))
+                        {
+                            <tr class="@(!media.IsActive ? "bg-light text-muted" : "")">
+                                <td class="align-middle" data-label="Order">
+                                    <span class="badge badge-brand rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px; font-size: 1rem;">
+                                        @media.DisplayOrder
+                                    </span>
+                                </td>
+                                <td class="align-middle" data-label="Media">
+                                    @if (media.MediaType == "Image")
+                                    {
+                                        <div class="media-preview shadow-sm">
+                                            <img src="@media.MediaUrl" alt="@media.Title" loading="lazy"
+                                                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2280%22%20height%3D%2260%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22Arial%22%20font-size%3D%2210%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%20fill%3D%22%23aaa%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E'" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="media-preview video-preview shadow-sm">
+                                            <i class="fas fa-video fa-lg text-white"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="align-middle" data-label="Details">
+                                    <div class="d-flex flex-column">
+                                        <strong class="text-dark mb-1 h6">@media.Title</strong>
+                                        @if (!string.IsNullOrEmpty(media.Description))
+                                        {
+                                            <small class="text-muted text-truncate" style="max-width: 250px;">@media.Description</small>
+                                        }
+                                        <!-- Mobile-only extras -->
+                                        <div class="d-md-none mt-2">
+                                            <span class="badge @(media.MediaType == "Image" ? "badge-info" : "badge-warning") mr-2">@media.MediaType</span>
+                                            <small class="text-muted"><i class="far fa-calendar mr-1"></i> @media.CreatedAt.ToString("MMM dd")</small>
+                                        </div>
+                                        <!-- Desktop-only extras -->
+                                        <div class="d-none d-md-block mt-1">
+                                            <span class="badge @(media.MediaType == "Image" ? "badge-info" : "badge-warning") rounded-pill px-2">
+                                                <i class="fas @(media.MediaType == "Image" ? "fa-image" : "fa-video") mr-1"></i>
+                                                @media.MediaType
+                                            </span>
+                                            <small class="text-muted ml-2">Added: @media.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle" data-label="Status">
+                                    <span class="badge @(media.IsActive ? "badge-success" : "badge-secondary") rounded-pill px-3 py-2">
+                                        <i class="fas @(media.IsActive ? "fa-eye" : "fa-eye-slash") mr-1"></i>
+                                        @(media.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="align-middle text-center" data-label="Actions">
+                                    <div class="btn-group btn-group-sm w-100-mobile shadow-sm" role="group">
+                                        <a asp-action="Edit" asp-route-id="@media.Id"
+                                           class="btn btn-outline-brand py-2"
+                                           title="Edit">
+                                            <i class="fas fa-edit"></i> <span class="d-md-none ml-1">Edit</span>
+                                        </a>
+                                        <button type="button"
+                                                class="btn @(media.IsActive ? "btn-outline-warning" : "btn-outline-success") py-2"
+                                                onclick="toggleStatus(@media.Id)"
+                                                title="@(media.IsActive ? "Deactivate" : "Activate")">
+                                            <i class="fas @(media.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-outline-danger py-2"
+                                                onclick="confirmDelete(@media.Id, '@media.Title.Replace("'", "\\'")')"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="py-4">
+                                        <div class="mb-3">
+                                            <span class="fa-stack fa-2x">
+                                                <i class="fas fa-circle fa-stack-2x text-light"></i>
+                                                <i class="fas fa-images fa-stack-1x text-brand"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="text-gray-800">No items found</h5>
+                                        <p class="text-muted mb-4">Start managing your Home Media by adding an item.</p>
+                                        <a asp-action="Create" class="btn btn-brand">
+                                            <i class="fas fa-plus-circle mr-2"></i> Add First Item
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (Model.Any())
+        {
+            <div class="card-footer bg-light py-3">
+                <div class="row">
+                    <div class="col-12 text-center text-muted small">
+                        Showing <strong>@Model.Count()</strong> items sorted by Display Order
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /*
+                   BRAND COLOR SYSTEM
+                   Base Color: #912356
+                */
+        :root {
+            --brand-color: #912356;
+            --brand-hover: #7a1d47;
+            --brand-light: #f8eef2;
+        }
+
+        /* --- Utilities --- */
+        .text-brand {
+            color: var(--brand-color) !important;
+        }
+
+        .bg-brand {
+            background-color: var(--brand-color) !important;
+        }
+
+        .border-left-brand {
+            border-left: 4px solid var(--brand-color) !important;
+        }
+
+        .badge-brand {
+            background-color: var(--brand-color);
+            color: white;
+        }
+
+        /* --- Buttons --- */
+        .btn-brand {
+            background-color: var(--brand-color);
+            border-color: var(--brand-color);
+            color: white;
+            transition: all 0.3s;
+        }
+
+            .btn-brand:hover {
+                background-color: var(--brand-hover);
+                border-color: var(--brand-hover);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .btn-outline-brand {
+            color: var(--brand-color);
+            border-color: var(--brand-color);
+            background: #fff;
+        }
+
+            .btn-outline-brand:hover {
+                background-color: var(--brand-color);
+                border-color: var(--brand-color);
+                color: white;
+            }
+
+        /* --- Components --- */
+        .card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .media-preview {
+            width: 80px;
+            height: 60px;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+            .media-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .video-preview {
+            background: linear-gradient(135deg, var(--brand-color), var(--brand-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- RESPONSIVE TABLE TRANSFORMATION --- */
+        @@media (max-width: 768px) {
+            .w-md-auto {
+                width: auto !important;
+            }
+            /* Hide standard headers */
+            .mobile-card-view thead {
+                display: none;
+            }
+            /* Make rows look like cards */
+            .mobile-card-view tr {
+                display: block;
+                margin-bottom: 1rem;
+                background-color: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+                padding: 1rem;
+            }
+            /* Make cells block level */
+            .mobile-card-view td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 0.5rem 0;
+                text-align: right;
+            }
+                /* Add labels via CSS */
+                .mobile-card-view td:before {
+                    content: attr(data-label);
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    font-size: 0.75rem;
+                    color: #888;
+                    text-align: left;
+                    margin-right: 1rem;
+                }
+                /* Special styling for Media Column */
+                .mobile-card-view td[data-label="Media"] {
+                    justify-content: center;
+                    padding: 1rem 0;
+                    background: var(--brand-light);
+                    border-radius: 8px;
+                    margin: 0.5rem 0;
+                }
+
+                    .mobile-card-view td[data-label="Media"]:before {
+                        display: none;
+                    }
+
+            .media-preview {
+                width: 100%;
+                height: 180px; /* Big image on mobile */
+            }
+            /* Special styling for Details Column */
+            .mobile-card-view td[data-label="Details"] {
+                display: block;
+                text-align: left;
+            }
+
+                .mobile-card-view td[data-label="Details"]:before {
+                    display: none;
+                }
+            /* Special styling for Actions Column */
+            .mobile-card-view td[data-label="Actions"] {
+                justify-content: center;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px dashed #eee;
+            }
+
+                .mobile-card-view td[data-label="Actions"]:before {
+                    display: none;
+                }
+            /* Action Buttons full width */
+            .w-100-mobile {
+                width: 100%;
+                display: flex;
+            }
+
+                .w-100-mobile .btn {
+                    flex: 1;
+                    padding: 0.8rem;
+                    font-size: 1.1rem; /* Easier to tap */
+                }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Only enable hover tooltips on desktop
+            if(window.matchMedia("(min-width: 768px)").matches) {
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+        });
+
+        // Toggle Active Status AJAX
+        function toggleStatus(id) {
+             const btn = $('button[onclick*="toggleStatus(' + id + ')"]');
+             const icon = btn.find('i');
+             const isDeactivating = icon.hasClass('fa-eye-slash');
+             const action = isDeactivating ? 'deactivate' : 'activate';
+
+            if (confirm(`Are you sure you want to ${action} this item?`)) {
+                // Optimistic UI update (optional, gives instant feedback)
+                // btn.prop('disabled', true);
+
+                $.post('@Url.Action("ToggleStatus", "HomeMedia")', { id: id })
+                    .done(function (response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            // Reload to reflect changes
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    })
+                    .fail(function () {
+                        showToast('error', 'Communication failed. Please check internet.');
+                    });
+            }
+        }
+
+        // Delete AJAX
+        function confirmDelete(id, title) {
+            if (confirm(`Permanently delete "${title}"? This cannot be undone.`)) {
+                $.post('@Url.Action("Delete", "HomeMedia")', { id: id })
+                    .done(function (response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    })
+                    .fail(function () {
+                        showToast('error', 'Communication failed. Please check internet.');
+                    });
+            }
+        }
+
+        // Custom Toast Notification Helper
+        function showToast(type, message) {
+            const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            // Create toast HTML dynamically
+            const toastHtml = `
+                <div class="toast align-items-center text-white ${bgClass} border-0 position-fixed"
+                     style="bottom: 20px; right: 20px; z-index: 9999; min-width: 280px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="d-flex">
+                        <div class="toast-body p-3 font-weight-bold">
+                            <i class="fas ${iconClass} mr-2"></i> ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const $toast = $(toastHtml);
+            $('body').append($toast);
+
+            // Initialize and show (Compatible with BS4 and BS5 via jQuery)
+            $toast.toast({ delay: 3000 });
+            $toast.toast('show');
+
+            // Cleanup DOM
+            $toast.on('hidden.bs.toast', function () {
+                $(this).remove();
+            });
+        }
+    </script>
+}

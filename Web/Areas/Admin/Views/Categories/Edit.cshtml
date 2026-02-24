@@ -1,0 +1,256 @@
+﻿@model Core.DTOs.Categories.CategoryUpdateDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Edit Category";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Edit Category</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to List
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Category Details</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="CurrentImageUrl" id="currentImageUrl" value="@Model.ImageUrl" />
+
+                        <div class="form-group">
+                            <label class="control-label font-weight-bold">Category Name *</label>
+                            <input type="text" name="Name" id="categoryName" class="form-control" value="@Model.Name" required />
+                            <span id="nameError" class="text-danger" style="display: none;"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label font-weight-bold">Description</label>
+                            <textarea name="Description" id="categoryDescription" class="form-control" rows="4">@Model.Description</textarea>
+                        </div>
+
+                        <!-- Current Image Display -->
+                        <div class="form-group">
+                            <label class="control-label font-weight-bold">Current Image</label>
+                            <div class="text-center p-3 bg-light rounded">
+                                <img id="currentImage" src="@Model.ImageUrl" alt="Current category image" class="img-thumbnail" style="max-height: 200px; object-fit: cover;">
+                            </div>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div class="form-group">
+                            <label class="control-label font-weight-bold">Update Image (Optional)</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="imageFile" name="ImageFile" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                                <label class="custom-file-label" for="imageFile" id="fileLabel">Choose new image file...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Leave empty to keep current image. Max size: 5MB. Formats: JPG, PNG, GIF, WebP.
+                            </small>
+                            <div id="fileError" class="text-danger small mt-1" style="display: none;"></div>
+                        </div>
+
+                        <!-- New Image Preview -->
+                        <div class="form-group" id="newImagePreviewContainer" style="display: none;">
+                            <label class="control-label font-weight-bold">New Image Preview</label>
+                            <div class="text-center p-3 bg-light rounded">
+                                <img id="newImagePreview" src="" alt="New image preview" class="img-thumbnail" style="max-height: 200px; object-fit: cover;">
+                                <div class="mt-2">
+                                    <button type="button" id="removeNewImage" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-times mr-1"></i>Cancel New Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary" style="background-color: #912356; border-color: #912356;" id="submitBtn">
+                                <i class="fas fa-save mr-2"></i>Update Category
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary ml-2">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Tips section -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Update Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <div class="info-box bg-light border-left-primary p-3 mb-3" style="border-left: 4px solid #4e73df;">
+                        <h6 class="font-weight-bold text-primary mb-2">
+                            <i class="fas fa-lightbulb mr-2"></i>Tips
+                        </h6>
+                        <ul class="mb-0 pl-3 text-dark small">
+                            <li class="mb-2">Update only the fields you want to change</li>
+                            <li class="mb-2">Leave image upload empty to keep current image</li>
+                            <li class="mb-2">New image will replace the old one permanently</li>
+                            <li class="mb-0">Category name must remain unique</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box bg-light border-left-warning p-3" style="border-left: 4px solid #f6c23e;">
+                        <h6 class="font-weight-bold text-warning mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Image Update
+                        </h6>
+                        <ul class="mb-0 pl-3 text-dark small">
+                            <li class="mb-2">Optional: Only upload if you want to change the image</li>
+                            <li class="mb-2">Old image will be deleted automatically</li>
+                            <li class="mb-0">Maximum file size: 5MB</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const maxFileSize = 5 * 1024 * 1024; // 5MB
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+        // File input change handler
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileError = document.getElementById('fileError');
+            const newImagePreviewContainer = document.getElementById('newImagePreviewContainer');
+            const newImagePreview = document.getElementById('newImagePreview');
+            const fileLabel = document.getElementById('fileLabel');
+
+            fileError.style.display = 'none';
+            fileError.textContent = '';
+
+            if (file) {
+                fileLabel.textContent = file.name;
+
+                // Validate file type
+                if (!validTypes.includes(file.type.toLowerCase())) {
+                    fileError.textContent = 'Please select a valid image file (JPG, PNG, GIF, WebP).';
+                    fileError.style.display = 'block';
+                    resetNewImage();
+                    return;
+                }
+
+                // Validate file size
+                if (file.size > maxFileSize) {
+                    fileError.textContent = 'File size must be less than 5MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB';
+                    fileError.style.display = 'block';
+                    resetNewImage();
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    newImagePreview.src = e.target.result;
+                    newImagePreviewContainer.style.display = 'block';
+                };
+                reader.onerror = function() {
+                    fileError.textContent = 'Error reading file. Please try again.';
+                    fileError.style.display = 'block';
+                    resetNewImage();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                resetNewImage();
+            }
+        });
+
+        // Remove new image handler
+        document.getElementById('removeNewImage').addEventListener('click', function() {
+            resetNewImage();
+        });
+
+        function resetNewImage() {
+            const fileInput = document.getElementById('imageFile');
+            const fileLabel = document.getElementById('fileLabel');
+            const newImagePreviewContainer = document.getElementById('newImagePreviewContainer');
+            const fileError = document.getElementById('fileError');
+
+            fileInput.value = '';
+            fileLabel.textContent = 'Choose new image file...';
+            newImagePreviewContainer.style.display = 'none';
+            fileError.style.display = 'none';
+        }
+
+        // Form validation before submit
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            const nameInput = document.getElementById('categoryName');
+            const submitBtn = document.getElementById('submitBtn');
+            const nameError = document.getElementById('nameError');
+            const fileInput = document.getElementById('imageFile');
+            const fileError = document.getElementById('fileError');
+
+            nameError.style.display = 'none';
+            fileError.style.display = 'none';
+
+            let hasError = false;
+
+            // Validate name
+            if (!nameInput.value.trim()) {
+                nameError.textContent = 'Please enter a category name.';
+                nameError.style.display = 'block';
+                nameInput.focus();
+                hasError = true;
+            }
+
+            // Validate new image if provided
+            if (fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+
+                if (!validTypes.includes(file.type.toLowerCase())) {
+                    fileError.textContent = 'Please select a valid image file.';
+                    fileError.style.display = 'block';
+                    hasError = true;
+                }
+
+                if (file.size > maxFileSize) {
+                    fileError.textContent = 'File size must be less than 5MB.';
+                    fileError.style.display = 'block';
+                    hasError = true;
+                }
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+
+            return true;
+        });
+    </script>
+}

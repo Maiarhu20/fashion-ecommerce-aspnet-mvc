@@ -1,0 +1,157 @@
+﻿@model IEnumerable<Core.DTOs.Products.ProductListDto>
+@{
+    var primaryColor = "#912356";
+}
+
+@if (Model != null && Model.Any())
+{
+    foreach (var product in Model)
+    {
+        <div class="col-lg-3 col-md-4 col-sm-6 col-6 mb-4">
+            <div class="card product-item border-0 mb-4 h-100" onclick="mobileViewClick(this, event)" data-product-id="@product.Id">
+                <!-- Product Images Carousel -->
+                <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style="height: 200px;">
+                    <div id="productCarousel-@product.Id" class="carousel slide product-image-carousel" data-interval="3500">
+                        <div class="carousel-inner">
+                            @if (product.Images != null && product.Images.Any())
+                            {
+                                @for (int i = 0; i < product.Images.Count; i++)
+                                {
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <img class="img-fluid w-100 h-100"
+                                             src="@product.Images[i].ImageUrl"
+                                             alt="@product.Name - Image @(i + 1)"
+                                             style="object-fit: cover;">
+                                    </div>
+                                }
+                            }
+                            else if (product.PrimaryImageUrl != null)
+                            {
+                                <div class="carousel-item active">
+                                    <img class="img-fluid w-100 h-100"
+                                         src="@product.PrimaryImageUrl"
+                                         alt="@product.Name"
+                                         style="object-fit: cover;">
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="carousel-item active">
+                                    <img class="img-fluid w-100 h-100"
+                                         src="~/images/default-product.jpg"
+                                         alt="@product.Name"
+                                         style="object-fit: cover;">
+                                </div>
+                            }
+                        </div>
+
+                        @if (product.DiscountPercent > 0)
+                        {
+                            <div class="position-absolute" style="top: 10px; left: 10px; z-index: 10;">
+                                <span class="badge py-1 px-2" style="background-color: #fff3cd; color: #856404; font-size: 0.8rem;">
+                                    -@product.DiscountPercent%
+                                </span>
+                            </div>
+                        }
+
+                        <!-- Navigation arrows - only show if multiple images -->
+                        @if (product.Images != null && product.Images.Count > 1)
+                        {
+                            <a class="carousel-control-prev" href="#productCarousel-@product.Id" role="button" data-slide="prev">
+                                <div class="btn btn-square" style="background-color: @primaryColor; border-color: @primaryColor; width: 30px; height: 30px;">
+                                    <i class="fa fa-angle-left text-white" style="font-size: 0.8rem;"></i>
+                                </div>
+                            </a>
+                            <a class="carousel-control-next" href="#productCarousel-@product.Id" role="button" data-slide="next">
+                                <div class="btn btn-square" style="background-color: @primaryColor; border-color: @primaryColor; width: 30px; height: 30px;">
+                                    <i class="fa fa-angle-right text-white" style="font-size: 0.8rem;"></i>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
+                    <h6 class="text-truncate mb-2">@product.Name</h6>
+                    <div class="d-flex justify-content-center mb-2">
+                        @if (product.DiscountPercent > 0)
+                        {
+                            <h6 class="text-primary" style="color: @primaryColor !important;">EGP @product.FinalPrice.ToString("F2")</h6>
+                            <h6 class="text-muted ml-2"><del>EGP @product.Price.ToString("F2")</del></h6>
+                        }
+                        else
+                        {
+                            <h6 class="text-primary" style="color: @primaryColor !important;">EGP @product.Price.ToString("F2")</h6>
+                        }
+                    </div>
+                    <!-- Colors -->
+                    @if (product.Colors != null && product.Colors.Any())
+                    {
+                        <div class="d-flex justify-content-center mb-2">
+                            @foreach (var color in product.Colors.Take(3))
+                            {
+                                <div class="mr-1 color-dot"
+                                     style="width: 15px; height: 15px; background-color: @color.ColorHexCode; border-radius: 50%; border: 1px solid #ccc;"
+                                     title="@color.ColorName">
+                                </div>
+                            }
+                            @if (product.Colors.Count > 3)
+                            {
+                                <small class="text-muted">+@(product.Colors.Count - 3) more</small>
+                            }
+                        </div>
+                        <small class="text-muted d-block mb-1">(Select color in details)</small>
+                    }
+                    <!--Stock Status-->
+                    <div class="d-flex justify-content-center">
+                        <small class="mr-3">
+                            <i class="fas fa-shopping-bag" style="color: @primaryColor;"></i>
+                            @if (product.StockQuantity > 20)
+                            {
+                                <span>In stock</span>
+                            }
+                            else if (product.StockQuantity > 0 && product.StockQuantity <= 20)
+                            {
+                                <span class="text-warning">@product.StockQuantity left</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Out of stock</span>
+                            }
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between bg-light border mobile-view-actions">
+                    <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm text-dark p-0 view-detail-btn">
+                        <i class="fas fa-eye" style="color: @primaryColor;"></i> View Detail
+                    </a>
+
+                    @if (product.StockQuantity > 0)
+                    {
+                        <!-- We store the first color in data-color if available, otherwise empty -->
+                        <a href="#"
+                           class="btn btn-sm text-dark p-0 add-to-cart-btn"
+                           data-product-id="@product.Id"
+                           data-product-name="@product.Name"
+                           data-color="@(product.Colors != null && product.Colors.Any() ? product.Colors.First().ColorName : "")">
+                            <i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="btn btn-sm text-dark p-0" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="fas fa-shopping-cart text-muted mr-1"></i> Out of Stock
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="col-12 text-center">
+        <p class="text-muted">No more products to load</p>
+    </div>
+}

@@ -1,0 +1,660 @@
+﻿@model IEnumerable<Core.DTOs.Products.ProductListDto>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Products";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    var isActiveProductsActive = currentAction == "Index" || currentAction == null;
+    var isDeletedProductsActive = currentAction == "Deleted";
+}
+
+<div class="container-fluid">
+    <!-- Page Header - Responsive -->
+    <div class="page-header">
+        <h1 class="h3 mb-0 text-gray-800">Products Management</h1>
+        <a asp-action="Create" class="btn btn-primary btn-create" style="background-color: #912356; border-color: #912356; color:beige">
+            <i class="fas fa-plus mr-2"></i>
+            <span class="btn-text">Add New Product</span>
+        </a>
+    </div>
+
+    <!-- Navigation Tabs - Responsive -->
+    <div class="nav-tabs-wrapper">
+        <div class="tab-buttons">
+            <a asp-action="Index" class="btn btn-sm @(isActiveProductsActive ? "btn-tab-active" : "btn-tab-inactive")">
+                <i class="fas fa-box mr-1 mr-md-2"></i>
+                <span class="tab-text-full">Active Products</span>
+                <span class="tab-text-short">Active</span>
+            </a>
+            <a asp-action="Deleted" class="btn btn-sm @(isDeletedProductsActive ? "btn-tab-active" : "btn-tab-inactive")">
+                <i class="fas fa-trash-restore mr-1 mr-md-2"></i>
+                <span class="tab-text-full">View Deleted Products</span>
+                <span class="tab-text-short">Deleted</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Products Grid -->
+    <div class="row mt-4">
+        @foreach (var product in Model)
+        {
+            <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-6 mb-4">
+                <div class="card product-item border-0 mb-4 h-100">
+                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
+                        @if (!string.IsNullOrEmpty(product.PrimaryImageUrl))
+                        {
+                            <img class="img-fluid w-100 h-100" style="object-fit: cover;" src="@product.PrimaryImageUrl" alt="@product.Name">
+                        }
+                        else
+                        {
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
+                                <i class="fas fa-image fa-2x text-muted"></i>
+                            </div>
+                        }
+                        @if (product.IsDeleted)
+                        {
+                            <div class="position-absolute deleted-badge">
+                                Deleted
+                            </div>
+                        }
+                    </div>
+                    <div class="card-body border-left border-right text-center">
+                        <h6 class="product-name text-truncate mb-2" title="@product.Name">@product.Name</h6>
+                        <p class="text-muted small mb-2 text-truncate category-name">@(product.CategoryName ?? "Uncategorized")</p>
+
+                        <!-- Price Display -->
+                        <div class="price-section mb-3">
+                            @if (product.DiscountPercent.HasValue && product.DiscountPercent > 0)
+                            {
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="discount-badge mb-1">
+                                        @product.DiscountPercent.Value% OFF
+                                    </div>
+                                    <div class="final-price text-primary font-weight-bold mb-1">
+                                        EGP @FormatPriceCompact(product.FinalPrice)
+                                    </div>
+                                    <div class="original-price">
+                                        <small class="text-muted">
+                                            <del>EGP @FormatPriceCompact(product.Price)</del>
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="final-price text-primary font-weight-bold">
+                                    EGP @FormatPriceCompact(product.Price)
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Stock & Orders - Compact -->
+                        <div class="stats-section mb-3">
+                            <div class="d-flex justify-content-around small text-muted">
+                                <div class="stat-item d-flex flex-column align-items-center">
+                                    <i class="fas fa-box mb-1"></i>
+                                    <span class="stat-value">@FormatNumberCompact(product.StockQuantity)</span>
+                                </div>
+                                <div class="stat-item d-flex flex-column align-items-center">
+                                    <i class="fas fa-shopping-cart mb-1"></i>
+                                    <span class="stat-value">@FormatNumberCompact(product.OrderCount)</span>
+                                </div>
+                                <div class="stat-item d-flex flex-column align-items-center">
+                                    <i class="fas fa-star mb-1"></i>
+                                    <span class="stat-value">@FormatNumberCompact(product.ReviewCount)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Colors - Compact -->
+                        @if (product.Colors != null && product.Colors.Any())
+                        {
+                            <div class="colors-section">
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    @foreach (var color in product.Colors.Take(3))
+                                    {
+                                        <span class="color-dot"
+                                              style="background-color: @color.ColorHexCode;"
+                                              title="@color.ColorName">
+                                        </span>
+                                    }
+                                    @if (product.Colors.Count > 3)
+                                    {
+                                        <span class="color-more small text-muted" title="@string.Join(", ", product.Colors.Skip(3).Select(c => c.ColorName))">
+                                            +@(product.Colors.Count - 3)
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer d-flex justify-content-between bg-light border">
+                        <a asp-area="Admin" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                           class="btn btn-sm text-dark action-btn" title="View Details">
+                            <i class="fas fa-eye text-primary"></i>
+                            <span class="action-text">View</span>
+                        </a>
+                        <a asp-area="Admin" asp-controller="Products" asp-action="Edit" asp-route-id="@product.Id"
+                           class="btn btn-sm text-dark action-btn" title="Edit Product">
+                            <i class="fas fa-edit text-warning"></i>
+                            <span class="action-text">Edit</span>
+                        </a>
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@product.Id" />
+                            <button type="submit" class="btn btn-sm text-dark action-btn border-0 bg-transparent"
+                                    title="Delete Product"
+                                    onclick="return confirm('Are you sure you want to delete this product?')">
+                                <i class="fas fa-trash text-danger"></i>
+                                <span class="action-text">Delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Empty State -->
+    @if (!Model.Any())
+    {
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Products Found</h4>
+            <p class="text-muted">Get started by creating your first product.</p>
+            <a asp-action="Create" class="btn btn-primary" style="background-color: #912356; border-color: #912356; color:beige">
+                <i class="fas fa-plus mr-2"></i>Create First Product
+            </a>
+        </div>
+    }
+</div>
+
+@functions {
+    private string FormatPriceCompact(decimal price)
+    {
+        if (price >= 1000)
+        {
+            return price.ToString("N0");
+        }
+        else if (price >= 100)
+        {
+            return price.ToString("N1");
+        }
+        else
+        {
+            return price.ToString("N2");
+        }
+    }
+
+    private string FormatNumberCompact(int number)
+    {
+        if (number >= 1000000)
+        {
+            return (number / 1000000.0).ToString("0.0") + "M";
+        }
+        else if (number >= 1000)
+        {
+            return (number / 1000.0).ToString("0.0") + "K";
+        }
+        else
+        {
+            return number.ToString();
+        }
+    }
+}
+
+@section Styles {
+    <style>
+        /* ========== PAGE HEADER ========== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+            .page-header h1 {
+                margin: 0;
+            }
+
+        .btn-create {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        /* ========== NAVIGATION TABS ========== */
+        .nav-tabs-wrapper {
+            margin-top: 1rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tab-text-short {
+            display: none;
+        }
+
+        .tab-text-full {
+            display: inline;
+        }
+
+        /* ========== PRODUCT CARD ========== */
+        .product-item {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+            .product-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            }
+
+            .product-item .card-header {
+                height: 200px;
+            }
+
+            .product-item .card-body {
+                flex: 1;
+                min-height: 0;
+                padding: 1rem 0.75rem;
+            }
+
+        .deleted-badge {
+            top: 8px;
+            left: 8px;
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .product-name {
+            font-size: 0.95rem;
+        }
+
+        .category-name {
+            font-size: 0.8rem;
+        }
+
+        /* ========== PRICE SECTION ========== */
+        .price-section {
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .final-price {
+            font-size: 1.1rem;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .discount-badge {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            border: 1px solid #ffeaa7;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .original-price del {
+            opacity: 0.7;
+        }
+
+        /* ========== STATS SECTION ========== */
+        .stats-section {
+            padding: 0 0.25rem;
+        }
+
+        .stat-item i {
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-size: 0.8rem;
+        }
+
+        /* ========== COLORS SECTION ========== */
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+        }
+
+        .color-more {
+            font-size: 0.75rem;
+            line-height: 20px;
+        }
+
+        /* ========== CARD FOOTER / ACTIONS ========== */
+        .card-footer {
+            padding: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .action-text {
+            font-size: 0.8rem;
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            padding: 3rem 1rem;
+        }
+
+        /* ========== RESPONSIVE: EXTRA SMALL (< 576px) ========== */
+        @@media (max-width: 575.98px) {
+            /* Header */
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+                .page-header h1 {
+                    font-size: 1.4rem;
+                    margin-bottom: 0.5rem;
+                }
+
+            .btn-create {
+                width: 100%;
+                justify-content: center;
+            }
+            /* Tabs */
+            .tab-buttons {
+                width: 100%;
+            }
+
+                .tab-buttons .btn {
+                    flex: 1;
+                    text-align: center;
+                    padding: 0.5rem;
+                    font-size: 0.85rem;
+                }
+
+            .tab-text-short {
+                display: inline;
+            }
+
+            .tab-text-full {
+                display: none;
+            }
+            /* Grid columns */
+            .col-6 {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+            /* Product card */
+            .product-item .card-header {
+                height: 140px;
+            }
+
+            .product-item .card-body {
+                padding: 0.5rem 0.4rem;
+            }
+
+            .product-name {
+                font-size: 0.85rem;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .category-name {
+                font-size: 0.7rem;
+                margin-bottom: 0.25rem !important;
+            }
+            /* Price */
+            .price-section {
+                min-height: 50px;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .final-price {
+                font-size: 0.95rem !important;
+            }
+
+            .discount-badge {
+                font-size: 0.7rem;
+                padding: 1px 6px;
+            }
+
+            .original-price small {
+                font-size: 0.7rem;
+            }
+            /* Stats */
+            .stats-section {
+                margin-bottom: 0.5rem !important;
+            }
+
+            .stat-item i {
+                font-size: 0.75rem;
+            }
+
+            .stat-value {
+                font-size: 0.65rem !important;
+            }
+            /* Colors */
+            .color-dot {
+                width: 14px;
+                height: 14px;
+            }
+
+            .color-more {
+                font-size: 0.65rem;
+                line-height: 14px;
+            }
+            /* Actions */
+            .card-footer {
+                padding: 0.4rem 0.25rem;
+            }
+
+            .action-btn {
+                padding: 0.15rem 0.25rem;
+            }
+
+                .action-btn i {
+                    font-size: 0.9rem;
+                }
+
+            .action-text {
+                display: none !important;
+            }
+            /* Empty state */
+            .empty-state h4 {
+                font-size: 1.1rem;
+            }
+
+            .empty-state p {
+                font-size: 0.9rem;
+            }
+
+            .empty-state .btn {
+                width: 100%;
+            }
+        }
+
+        /* ========== RESPONSIVE: SMALL (576px - 767px) ========== */
+        @@media (min-width: 576px) and (max-width: 767.98px) {
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .tab-text-short {
+                display: inline;
+            }
+
+            .tab-text-full {
+                display: none;
+            }
+
+            .product-item .card-header {
+                height: 160px;
+            }
+
+            .product-item .card-body {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .product-name {
+                font-size: 0.9rem;
+            }
+
+            .final-price {
+                font-size: 1rem;
+            }
+
+            .discount-badge {
+                font-size: 0.75rem;
+            }
+
+            .color-dot {
+                width: 16px;
+                height: 16px;
+            }
+
+            .action-text {
+                display: none !important;
+            }
+        }
+
+        /* ========== RESPONSIVE: MEDIUM (768px - 991px) ========== */
+        @@media (min-width: 768px) and (max-width: 991.98px) {
+            .product-item .card-header {
+                height: 180px;
+            }
+
+            .product-item .card-body {
+                padding: 0.75rem 0.6rem;
+            }
+
+            .product-name {
+                font-size: 0.9rem;
+            }
+
+            .final-price {
+                font-size: 1.05rem;
+            }
+
+            .discount-badge {
+                font-size: 0.8rem;
+            }
+
+            .color-dot {
+                width: 18px;
+                height: 18px;
+            }
+
+            .action-text {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* ========== RESPONSIVE: LARGE (992px - 1199px) ========== */
+        @@media (min-width: 992px) and (max-width: 1199.98px) {
+            .product-item .card-header {
+                height: 180px;
+            }
+
+            .product-item .card-body {
+                padding: 0.85rem 0.65rem;
+            }
+        }
+
+        /* ========== TRUNCATE HELPER ========== */
+        .text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+            max-width: 100%;
+        }
+
+        /* ========== GAP UTILITY ========== */
+        .gap-1 {
+            gap: 0.25rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+
+            // Initialize tooltips
+            $('[title]').tooltip({
+                placement: 'top',
+                trigger: 'hover'
+            });
+
+            // Handle long price numbers - reduce font size if overflow
+            function adjustPrices() {
+                $('.final-price').each(function() {
+                    var $this = $(this);
+                    var textWidth = $this[0].scrollWidth;
+                    var containerWidth = $this.parent().width();
+
+                    if (textWidth > containerWidth) {
+                        var currentSize = parseFloat($this.css('font-size'));
+                        var newSize = currentSize * (containerWidth / textWidth) * 0.9;
+                        if (newSize < 10) newSize = 10; // Minimum size
+                        $this.css('font-size', newSize + 'px');
+                    }
+                });
+            }
+
+            // Run on load and resize
+            adjustPrices();
+            $(window).on('resize', function() {
+                // Reset font sizes first
+                $('.final-price').css('font-size', '');
+                adjustPrices();
+            });
+        });
+    </script>
+}

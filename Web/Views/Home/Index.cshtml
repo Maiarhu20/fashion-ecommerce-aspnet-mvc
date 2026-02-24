@@ -1,0 +1,1151 @@
+﻿@inject Core.Services.CategoryService CategoryService
+@inject Core.Services.HomeMediaService HomeMediaService
+
+@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var primaryColor = "#912356";
+}
+
+@{
+    var categoriesResult = await CategoryService.GetAllAsync();
+    var categories = categoriesResult.Succeeded ? categoriesResult.Data : new List<CategoryListDto>();
+
+    var carouselResult = await HomeMediaService.GetActiveCarouselItemsAsync();
+    var carouselItems = carouselResult.Succeeded ? carouselResult.Data.ToList() : new List<HomeMediaListDto>();
+
+    var newArrivals = ViewBag.NewArrivals as List<ProductListDto> ?? new List<ProductListDto>();
+    var reviews = ViewBag.Reviews as List<ReviewResponseDto> ?? new List<ReviewResponseDto>();
+}
+
+
+@Html.AntiForgeryToken()
+
+<!-- Carousel Start -->
+@if (carouselItems.Any())
+{
+    <div id="header-carousel" class="carousel slide hero-carousel" data-ride="carousel" data-interval="5000">
+        <div class="carousel-inner">
+            @for (int i = 0; i < carouselItems.Count; i++)
+            {
+                var item = carouselItems[i];
+                <div class="carousel-item @(i == 0 ? "active" : "") hero-item">
+                    @if (item.MediaType == "Image")
+                    {
+                        <img class="carousel-media media-image"
+                             src="@item.MediaUrl"
+                             alt="@item.Title"
+                             loading="eager"
+                             decoding="async"
+                             sizes="(max-width: 768px) 100vw, 1920px" />
+                    }
+                    else if (item.MediaType == "Video")
+                    {
+                        <div class="video-container">
+                            <video class="carousel-media media-video" autoplay muted loop playsinline>
+                                <source src="@item.MediaUrl" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    }
+
+                    <!-- Overlay caption -->
+                    <div class="carousel-caption d-flex flex-column align-items-center justify-content-center hero-caption">
+                        <div class="p-4 caption-inner">
+                            @if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                <h4 class="caption-subtitle text-uppercase font-weight-bold mb-3">
+                                    @item.Description
+                                </h4>
+                            }
+                            <h3 class="caption-title font-weight-bold mb-4">
+                                @item.Title
+                            </h3>
+                            @if (!string.IsNullOrEmpty(item.ButtonText) && !string.IsNullOrEmpty(item.ButtonLink))
+                            {
+                                <a href="@item.ButtonLink" class="btn shop-now-btn py-3 px-5 mt-2">
+                                    @item.ButtonText
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (carouselItems.Count > 1)
+        {
+            <ol class="carousel-indicators hero-indicators">
+                @for (int i = 0; i < carouselItems.Count; i++)
+                {
+                    <li data-target="#header-carousel"
+                        data-slide-to="@i"
+                        class="@(i == 0 ? "active" : "")"
+                        aria-label="Slide @(i + 1)">
+                    </li>
+                }
+            </ol>
+        }
+
+        @if (carouselItems.Count > 1)
+        {
+            <a class="carousel-control-prev d-none d-md-flex" href="#header-carousel" data-slide="prev" aria-label="Previous">
+                <div class="btn btn-dark" style="width: 45px; height: 45px; border-radius: 50%;">
+                    <span class="carousel-control-prev-icon"></span>
+                </div>
+            </a>
+            <a class="carousel-control-next d-none d-md-flex" href="#header-carousel" data-slide="next" aria-label="Next">
+                <div class="btn btn-dark" style="width: 45px; height: 45px; border-radius: 50%;">
+                    <span class="carousel-control-next-icon"></span>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div id="header-carousel" class="carousel slide hero-carousel" data-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active hero-item">
+                <img class="carousel-media media-image"
+                     src="~/images/default_image.png"
+                     alt="Welcome"
+                     loading="eager"
+                     decoding="async"
+                     sizes="(max-width: 768px) 100vw, 1920px">
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center hero-caption">
+                    <div class="p-4 caption-inner">
+                        <h4 class="caption-subtitle text-uppercase font-weight-bold mb-3">
+                            10% Off Your First Order
+                        </h4>
+                        <h3 class="caption-title font-weight-bold mb-4">
+                            Welcome to Our Store
+                        </h3>
+                        <a href="@Url.Action("AllProducts", "Products")" class="btn shop-now-btn py-3 px-5 mt-2">
+                            Shop Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ol class="carousel-indicators hero-indicators">
+            <li data-target="#header-carousel" data-slide-to="0" class="active" aria-label="Slide 1"></li>
+        </ol>
+    </div>
+}
+<!-- Carousel End -->
+<!-- Categories Section Start -->
+<div class="container-fluid py-5" style="background-color: #f9e8e9;">
+    <div class="row px-xl-5">
+        <div class="col-12 text-center mb-4">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">Categories</h2>
+            </div>
+        </div>
+    </div>
+    <div class="categories-grid px-xl-5 pb-3">
+        @foreach (var category in categories.Select((value, index) => new { value, index }))
+        {
+            <div class="category-card" data-index="@category.index">
+                <div class="cat-item">
+                    <div class="cat-img-wrapper">
+                        @if (!string.IsNullOrEmpty(category.value.ImageUrl))
+                        {
+                            <img class="category-image"
+                                 src="@category.value.ImageUrl"
+                                 alt="@category.value.Name"
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <img class="category-image"
+                                 src="~/images/default-image.jpg"
+                                 alt="@category.value.Name"
+                                 loading="lazy" />
+                        }
+                        <div class="category-overlay">
+                            <div class="overlay-content">
+                                <h4>@category.value.Name</h4>
+                                <p class="product-count">@category.value.ProductCount Products</p>
+                                @if (!string.IsNullOrEmpty(category.value.Description))
+                                {
+                                    <p class="description">@category.value.Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cat-info">
+                        <h5>@category.value.Name</h5>
+                        <span class="badge">@category.value.ProductCount Products</span>
+                    </div>
+                    <a class="stretched-link"
+                       href="@Url.Action("ProductsByCategory", "Products", new { id = category.value.Id })"></a>
+                </div>
+            </div>
+        }
+        @if (!categories.Any())
+        {
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <h5>No categories available at the moment.</h5>
+                    <p>Please check back later for our product categories.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<!-- Categories Section End -->
+
+<!-- New Arrivals Section Start -->
+@if (newArrivals.Any())
+{
+    <div class="container-fluid py-5">
+        <div class="row px-xl-5">
+            <div class="col-12 text-center mb-4">
+                <div class="section-title-wrapper">
+                    <h2 class="section-title">New Arrivals</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row px-xl-5 pb-3">
+            @foreach (var product in newArrivals)
+            {
+                <div class="col-lg-3 col-md-4 col-6 mb-4 product-card-wrapper">
+                    <div class="card product-item border-0 mb-4 h-100 product-card-clickable"
+                         data-product-url="@Url.Action("Details", "Products", new { id = product.Id })">
+
+                        <div class="card-header bg-transparent border-0 p-0">
+                            <div id="newArrivalCarousel-@product.Id" class="carousel slide product-image-carousel" data-interval="3500">
+                                <div class="carousel-inner product-image-frame">
+                                    @if (product.Images != null && product.Images.Any())
+                                    {
+                                        @for (int j = 0; j < product.Images.Count; j++)
+                                        {
+                                            <div class="carousel-item @(j == 0 ? "active" : "")">
+                                                <img class="product-image"
+                                                     src="@product.Images[j].ImageUrl"
+                                                     alt="@product.Name - Image @(j + 1)"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     sizes="(max-width: 576px) 50vw, (max-width: 992px) 33vw, 300px" />
+                                            </div>
+                                        }
+                                    }
+                                    else if (!string.IsNullOrEmpty(product.PrimaryImageUrl))
+                                    {
+                                        <div class="carousel-item active">
+                                            <img class="product-image"
+                                                 src="@product.PrimaryImageUrl"
+                                                 alt="@product.Name"
+                                                 loading="lazy"
+                                                 decoding="async"
+                                                 sizes="(max-width: 576px) 50vw, (max-width: 992px) 33vw, 300px" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="carousel-item active">
+                                            <img class="product-image"
+                                                 src="~/images/default-product.jpg"
+                                                 alt="@product.Name"
+                                                 loading="lazy"
+                                                 decoding="async" />
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (product.DiscountPercent > 0)
+                                {
+                                    <div class="position-absolute" style="top: 10px; left: 10px; z-index: 10;">
+                                        <span class="badge py-1 px-2" style="background-color: #fff3cd; color: #856404; font-size: 0.8rem;">
+                                            -@product.DiscountPercent%
+                                        </span>
+                                    </div>
+                                }
+                                <div class="position-absolute" style="top: 10px; right: 10px; z-index: 10;">
+                                    <span class="badge py-1 px-2" style="background-color:#fff; color: @primaryColor; font-size: 0.9rem;">
+                                        New
+                                    </span>
+                                </div>
+
+                                @if (product.Images != null && product.Images.Count > 1)
+                                {
+                                    <a class="carousel-control-prev d-none d-md-flex" href="#newArrivalCarousel-@product.Id" role="button" data-slide="prev">
+                                        <div class="btn btn-square" style="background-color: @primaryColor; border-color: @primaryColor; width: 30px; height: 30px;">
+                                            <i class="fa fa-angle-left text-white" style="font-size: 0.8rem;"></i>
+                                        </div>
+                                    </a>
+                                    <a class="carousel-control-next d-none d-md-flex" href="#newArrivalCarousel-@product.Id" role="button" data-slide="next">
+                                        <div class="btn btn-square" style="background-color: @primaryColor; border-color: @primaryColor; width: 30px; height: 30px;">
+                                            <i class="fa fa-angle-right text-white" style="font-size: 0.8rem;"></i>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
+                            <h6 class="text-truncate mb-2">@product.Name</h6>
+                            <div class="d-flex justify-content-center mb-2">
+                                @if (product.DiscountPercent > 0)
+                                {
+                                    <h6 class="text-primary" style="color: @primaryColor !important;">EGP @product.FinalPrice.ToString("F2")</h6>
+                                    <h6 class="text-muted ml-2"><del>EGP @product.Price.ToString("F2")</del></h6>
+                                }
+                                else
+                                {
+                                    <h6 class="text-primary" style="color: @primaryColor !important;">EGP @product.Price.ToString("F2")</h6>
+                                }
+                            </div>
+
+                            @if (product.Colors != null && product.Colors.Any())
+                            {
+                                <div class="d-flex justify-content-center mb-2 product-colors">
+                                    @foreach (var color in product.Colors.Take(3))
+                                    {
+                                        <div class="mr-1 color-dot"
+                                             style="width: 15px; height: 15px; background-color: @color.ColorHexCode; border-radius: 50%; border: 1px solid #ccc;"
+                                             title="@color.ColorName">
+                                        </div>
+                                    }
+                                    @if (product.Colors.Count > 3)
+                                    {
+                                        <small class="text-muted">+@(product.Colors.Count - 3) more</small>
+                                    }
+                                </div>
+                                <small class="text-muted mb-1 d-block product-color-hint">(Select color in details)</small>
+                            }
+
+                            <div class="d-flex justify-content-center product-stock">
+                                <small class="mr-3">
+                                    <i class="fas fa-shopping-bag" style="color: @primaryColor;"></i>
+                                    @if (product.StockQuantity > 20)
+                                    {
+                                        <span>In stock</span>
+                                    }
+                                    else if (product.StockQuantity > 0 && product.StockQuantity <= 20)
+                                    {
+                                        <span class="text-warning">@product.StockQuantity left</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">Out of stock</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="card-footer d-none d-md-flex justify-content-between bg-light border">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm text-dark p-0">
+                                <i class="fas fa-eye" style="color: @primaryColor;"></i> View Detail
+                            </a>
+
+                            @if (product.StockQuantity > 0)
+                            {
+                                <a href="#"
+                                   class="btn btn-sm text-dark p-0 add-to-cart-btn"
+                                   data-product-id="@product.Id"
+                                   data-product-name="@product.Name"
+                                   data-color="@(product.Colors != null && product.Colors.Any() ? product.Colors.First().ColorName : "")">
+                                    <i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="btn btn-sm text-dark p-0" style="opacity: 0.5; cursor: not-allowed;">
+                                    <i class="fas fa-shopping-cart text-muted mr-1"></i> Out of Stock
+                                </span>
+                            }
+                        </div>
+
+                        <div class="card-footer d-flex d-md-none justify-content-center bg-light border">
+                            @if (product.StockQuantity > 0)
+                            {
+                                <a href="#"
+                                   class="btn btn-sm text-dark p-0 add-to-cart-btn"
+                                   data-product-id="@product.Id"
+                                   data-product-name="@product.Name"
+                                   data-color="@(product.Colors != null && product.Colors.Any() ? product.Colors.First().ColorName : "")">
+                                    <i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="btn btn-sm text-white p-2 px-3" style="background-color: #ccc; border-radius: 20px; cursor: not-allowed;">
+                                    <i class="fas fa-times mr-1"></i> Out of Stock
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+<!-- New Arrivals Section End -->
+
+<!-- Reviews Section Start -->
+@if (reviews.Any())
+{
+    <div class="container-fluid py-5" style="background-color: #f9e8e9;">
+        <div class="row px-xl-5">
+            <div class="col-12 text-center mb-5">
+                <div class="section-title-wrapper">
+                    <h2 class="section-title">What Customers Say</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="reviews-slider-container">
+                    <div class="reviews-slider" id="reviewsSlider">
+                        @foreach (var review in reviews)
+                        {
+                            <div class="review-slide">
+                                <div class="review-card-wrapper">
+                                    <div class="review-content-section">
+                                        <div class="quote-icon">
+                                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect width="40" height="40" rx="8" fill="#3CB371" />
+                                                <path d="M12 24V18C12 15.79 13.79 14 16 14H17V17H16C15.45 17 15 17.45 15 18V19H17V24H12ZM22 24V18C22 15.79 23.79 14 26 14H27V17H26C25.45 17 25 17.45 25 18V19H27V24H22Z" fill="white" />
+                                            </svg>
+                                        </div>
+                                        <p class="review-text">
+                                            "@(review.Comment?.Length > 200 ? review.Comment.Substring(0, 200) + "..." : review.Comment)"
+                                        </p>
+                                        <div class="reviewer-details">
+                                            <h5 class="reviewer-name">@review.GuestName</h5>
+                                            <p class="reviewer-title">Review for @review.ProductName</p>
+                                        </div>
+                                    </div>
+                                    <div class="reviewer-image-section">
+                                        @if (!string.IsNullOrEmpty(review.ProductImageUrl))
+                                        {
+                                            <div class="product-image-wrapper">
+                                                <a href="@Url.Action("Details", "Products", new { id = review.ProductId })">
+                                                    <img src="@review.ProductImageUrl" alt="@review.ProductName" class="review-product-image" loading="lazy" decoding="async" />
+                                                </a>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="reviewer-avatar-large">
+                                                <span class="avatar-letter">@review.GuestName?.Substring(0, 1).ToUpper()</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="slider-dots">
+                        @for (int i = 0; i < reviews.Count; i++)
+                        {
+                            <span class="slider-dot @(i == 0 ? "active" : "")" data-slide="@i"></span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<!-- Reviews Section End -->
+
+<style>
+    :root {
+        --primary-color: #912356;
+        --primary-dark: #7a1d47;
+        --primary-light: #f8eef2;
+        --body-bg: #f9e8e9;
+        --white: #ffffff;
+        --text-dark: #333333;
+        --text-muted: #666666;
+        --gray-light: #f8f9fa;
+        --gray-border: #e9ecef;
+    }
+
+    .shop-now-btn { background-color: var(--white); color: #000; border: 2px solid var(--primary-color); font-size: 1.1rem; font-weight: 600; transition: all 0.3s ease; border-radius: 4px; }
+    .shop-now-btn:hover { background-color: var(--primary-color); color: var(--white); border-color: var(--primary-color); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(145, 35, 86, 0.2); }
+
+    .section-title-wrapper { display: inline-block; position: relative; margin: 20px 0; }
+    .section-title { font-size: 28px; font-weight: 700; color: var(--text-dark); margin: 0; padding: 10px 30px; background-color: var(--body-bg); display: inline-block; }
+    .section-title::before, .section-title::after { content: ''; position: absolute; top: 50%; width: 80px; height: 2px; background-color: var(--text-dark); transform: translateY(-50%); }
+    .section-title::before { left: -80px; }
+    .section-title::after { right: -80px; }
+    .container-fluid:not([style*="background-color"]) .section-title { background-color: var(--white); }
+
+    /* Hero carousel */
+    .hero-carousel { width: 100%; margin-bottom: 0; }
+    .hero-item { min-height: clamp(360px, 56vh, 680px); position: relative; overflow: hidden; }
+    .carousel-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; background-color: var(--primary-light); }
+    .video-container { width: 100%; height: 100%; background-color: transparent; }
+
+    /* Desktop/tablet caption overlay */
+    .hero-caption {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 2rem;
+        border-radius: 10px;
+        /* width is set dynamically by JS; keep auto here */
+        width: auto;
+        max-width: 100%;
+    }
+    .hero-caption .caption-subtitle,
+    .hero-caption .caption-title { color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    .hero-caption .caption-title { font-size: 2.25rem; }
+    .hero-caption .caption-subtitle { font-size: 1.1rem; letter-spacing: 1px; }
+
+    /* Indicators (dots) */
+    .hero-carousel .carousel-indicators { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); margin: 0; }
+    .hero-carousel .carousel-indicators li { width: 10px; height: 10px; border-radius: 50%; margin: 0 6px; background-color: rgba(255,255,255,0.6); border: 2px solid var(--primary-color); cursor: pointer; }
+    .hero-carousel .carousel-indicators .active { background-color: var(--primary-color); }
+
+    /* Mobile: dark overlay caption and portrait videos fill like images */
+    @@media (max-width: 767.98px) {
+        .hero-item { min-height: 72vh; }
+        .media-image { height: 72vh; object-fit: cover; object-position: center; }
+        .media-video { height: 72vh; object-fit: contain; object-position: center; background: transparent; }
+        .media-video.is-portrait { object-fit: cover !important; object-position: center !important; }
+        .video-container { height: 100%; }
+
+        .hero-caption {
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            bottom: 0.8rem !important;
+            /* width is set by JS based on media display size */
+            background: rgba(0, 0, 0, 0.45) !important;
+            border-radius: 10px !important;
+            padding: 0.9rem 0.75rem !important;
+            z-index: 10;
+            max-width: 100%;
+        }
+        .hero-caption .caption-title,
+        .hero-caption .caption-subtitle {
+            color: #fff !important;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.6) !important;
+        }
+        .hero-caption .caption-title { font-size: 1.5rem; line-height: 1.25; margin-bottom: 0.6rem !important; }
+        .hero-caption .caption-subtitle { font-size: 1rem; line-height: 1.3; margin-bottom: 0.6rem !important; }
+
+        #header-carousel .carousel-control-prev,
+        #header-carousel .carousel-control-next { display: none !important; }
+    }
+
+    /* Categories */
+/* Categories Section - Complete Styling */
+.categories-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(300px, auto);
+}
+
+.category-card {
+    position: relative;
+}
+
+.cat-item {
+    height: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hover effect for the entire card (desktop) */
+.cat-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 35px rgba(145, 35, 86, 0.2);
+}
+
+.cat-img-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5; /* For default card image aspect ratio */
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.category-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.6s ease;
+}
+
+/* Image zoom on hover (desktop) */
+.cat-item:hover .category-image {
+    transform: scale(1.1);
+}
+
+.category-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(145, 35, 86, 0.7) 50%,
+        rgba(145, 35, 86, 0.95) 100%
+    );
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.4s ease;
+    z-index: 2; /* Add this */
+}
+
+/* Overlay becomes visible when card is hovered (desktop) or active (mobile tap) */
+.category-card.active .category-overlay,
+.cat-item:hover .category-overlay {
+    opacity: 1 !important; /* Force visible */
+    pointer-events: auto !important; /* Allows interaction (e.g., clicking the stretched link) */
+}
+
+.overlay-content {
+    color: white;
+    width: 100%;
+}
+
+.overlay-content h4 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.overlay-content .product-count {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.overlay-content .description {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    opacity: 0.95;
+    max-height: 60px; /* Limits description height */
+    overflow: hidden; /* Hides overflowing text */
+}
+
+.cat-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: transform 0.4s ease;
+    /* CRITICAL: Info strip is visible by default */
+    transform: translateY(0) !important;
+}
+
+/* Info strip slides out of view when card is hovered (desktop) or active (mobile tap) */
+.category-card.active .cat-info,
+.cat-item:hover .cat-info {
+    transform: translateY(100%) !important; /* Force slide out */
+}
+
+.cat-info h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.cat-info .badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.stretched-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3; /* Update to 3 */
+}
+
+/* Responsive - Tablet (e.g., iPads in portrait) */
+@@media (max-width: 992px) {
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns */
+        gap: 15px;
+    }
+}
+
+/* Categories Mobile Fix */
+@@media (max-width: 768px) {
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        grid-auto-rows: auto;
+    }
+
+    /* Remove the white background/frame around cards */
+    .cat-item {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        padding: 0 !important;
+    }
+
+    .cat-img-wrapper {
+        aspect-ratio: 1 / 1; /* Square images like the screenshot */
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    /* Style the default bottom info strip to look like screenshot 2 */
+    .cat-info {
+        position: relative !important;
+        background: #fff !important;
+        padding: 12px 10px !important;
+        transform: none !important;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+        display: block !important;
+        text-align: left;
+    }
+
+    .cat-info h5 {
+        font-size: 1rem !important;
+        margin-bottom: 5px !important;
+        color: #333;
+    }
+
+    .cat-info .badge {
+        background: var(--primary-color) !important;
+        font-size: 0.75rem !important;
+        padding: 4px 10px !important;
+        border-radius: 50px !important;
+    }
+
+    /* Style the tap overlay to look like screenshot 1 */
+    .category-overlay {
+        background: linear-gradient(to bottom, transparent 0%, rgba(145, 35, 86, 0.8) 100%) !important;
+        border-radius: 16px;
+        padding: 15px !important;
+    }
+
+    /* Logic: When active (tapped), hide the white strip and show the overlay */
+    .category-card.active .cat-info {
+        display: none !important;
+    }
+
+    .overlay-content h4 {
+        font-size: 1.2rem !important;
+        color: #fff !important;
+        font-weight: bold;
+    }
+
+    .overlay-content .product-count {
+        font-size: 0.9rem !important;
+        color: #eee !important;
+    }
+
+    .overlay-content .description {
+        display: none; /* Keep it clean for mobile */
+    }
+}
+
+/* Responsive - Small Mobile (e.g., very narrow phones) */
+@@media (max-width: 576px) {
+    .categories-grid {
+        gap: 10px;
+        /* You might want a single column here for very small screens: */
+        /* grid-template-columns: 1fr; */
+    }
+}
+
+    /* Product cards */
+    .product-item { border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; transition: all 0.3s ease !important; overflow: hidden !important; border: 1px solid var(--gray-border) !important; background: var(--white); }
+    .product-item:hover { transform: translateY(-5px) !important; box-shadow: 0 10px 25px rgba(145, 35, 86, 0.15) !important; border-color: var(--primary-color) !important; }
+
+    .product-image-carousel { width: 100%; }
+    .product-image-frame { aspect-ratio: 4 / 5; width: 100%; background: var(--primary-light); position: relative; overflow: hidden; }
+    .product-image-carousel .carousel-inner { height: 100%; }
+    .product-image-carousel .carousel-item { height: 100%; }
+    .product-image { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; }
+    @@media (min-width: 768px) { .product-image { object-fit: cover; } }
+
+    .carousel-control-prev, .carousel-control-next { width: 30px; height: 30px; top: 50%; transform: translateY(-50%); opacity: 0.7; border-radius: 5px !important; }
+    .carousel-control-prev { left: 5px; }
+    .carousel-control-next { right: 5px; }
+    .carousel-control-prev:hover, .carousel-control-next:hover { opacity: 1; }
+    .btn-square { width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px !important; }
+
+    .color-dot { width: 15px !important; height: 15px !important; border-radius: 50% !important; display: inline-block !important; border: 1px solid #dee2e6 !important; cursor: pointer !important; transition: transform 0.2s !important; }
+    .color-dot:hover { transform: scale(1.2) !important; box-shadow: 0 0 5px rgba(0,0,0,0.3) !important; }
+
+    .card-footer { background: var(--gray-light); border-top: 1px solid var(--gray-border); padding: 15px; }
+    .card-footer .btn { transition: all 0.2s ease; border-radius: 4px; }
+    .card-footer .btn:hover { transform: translateY(-2px); }
+    .card-footer .btn.text-dark:hover { color: var(--primary-color) !important; }
+
+    .text-primary { color: var(--primary-color) !important; }
+    .text-warning { color: #ffc107 !important; font-weight: 600; }
+    .text-danger { color: #dc3545 !important; font-weight: 600; }
+
+    /* Reviews */
+    .reviews-slider-container { max-width: 900px; margin: 0 auto; position: relative; padding: 20px; }
+    .reviews-slider { overflow: hidden; position: relative; min-height: 320px; }
+    .review-slide { display: none; animation: fadeIn 0.6s ease-out; }
+    .review-slide.active { display: block; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .review-card-wrapper { display: flex; align-items: stretch; background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); min-height: 280px; border: 1px solid var(--gray-border); }
+    .review-content-section { flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+    .quote-icon { margin-bottom: 20px; }
+    .review-text { font-size: 16px; line-height: 1.8; color: var(--text-muted); font-style: italic; margin-bottom: 25px; }
+    .reviewer-details { margin-top: auto; border-top: 1px solid var(--gray-border); padding-top: 15px; }
+    .reviewer-name { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
+    .reviewer-title { font-size: 14px; color: var(--primary-color); margin: 0; font-weight: 500; }
+    .reviewer-image-section { width: 280px; min-width: 280px; background: linear-gradient(135deg, var(--primary-light) 0%, #e8c0cc 100%); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .product-image-wrapper { width: 200px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 35px rgba(145, 35, 86, 0.2); transition: transform 0.3s ease; border: 3px solid var(--white); }
+    .product-image-wrapper:hover { transform: scale(1.05); }
+    .review-product-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .product-image-wrapper:hover .review-product-image { transform: scale(1.1); }
+    .reviewer-avatar-large { width: 180px; height: 180px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 35px rgba(145, 35, 86, 0.3); }
+    .avatar-letter { font-size: 72px; font-weight: 700; color: var(--white); }
+    .slider-dots { display: flex; justify-content: center; gap: 12px; margin-top: 40px; }
+    .slider-dot { width: 14px; height: 14px; border-radius: 50%; background-color: #ddd; cursor: pointer; transition: all 0.3s ease; }
+    .slider-dot.active { background-color: var(--primary-color); transform: scale(1.2); }
+    .slider-dot:hover { background-color: var(--primary-color); transform: scale(1.1); }
+
+    .toast-alert { animation: slideInRight 0.3s ease; border-radius: 8px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); border: none; min-width: 300px; }
+    @@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    @@media (max-width: 992px) {
+        .section-title { font-size: 22px; }
+        .section-title::before, ..section-title::after { width: 50px; }
+        .section-title::before { left: -50px; }
+        .section-title::after { right: -50px; }
+        .reviewer-image-section { width: 220px; min-width: 220px; }
+        .product-image-wrapper { width: 160px; height: 160px; }
+    }
+
+    @@media (max-width: 767.98px) {
+        .col-6 { padding-left: 6px; padding-right: 6px; }
+        .section-title::before, .section-title::after { width: 30px; }
+        .section-title::before { left: -30px; }
+        .section-title::after { right: -30px; }
+        .product-item .card-body { padding: 8px 5px !important; }
+        .product-item .card-body h6 { font-size: 0.85rem !important; margin-bottom: 5px !important; }
+        .product-item .card-body .d-flex h6 { font-size: 0.9rem !important; }
+        .card-footer { padding: 8px !important; }
+        .product-card-clickable { cursor: pointer; }
+        .product-card-clickable:active { transform: scale(0.98); }
+        .review-card-wrapper { flex-direction: column-reverse; min-height: auto; }
+        .reviewer-image-section { width: 100%; min-width: 100%; padding: 30px; }
+        .product-image-wrapper { width: 140px; height: 140px; }
+        .review-content-section { padding: 30px; }
+        .review-text { font-size: 14px; }
+        .cat-item { padding: 15px !important; }
+        .cat-item h5 { font-size: 1rem; }
+        .product-colors { margin-top: 4px; }
+        .product-color-hint { font-size: 0.7rem; }
+        .product-stock { margin-top: 4px; font-size: 0.75rem; }
+        .color-dot { width: 12px !important; height: 12px !important; }
+    }
+
+    @@media (max-width: 576px) {
+        .section-title::before, .section-title::after { display: none; }
+        .section-title { border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; }
+        .reviewer-avatar-large { width: 100px; height: 100px; }
+        .avatar-letter { font-size: 40px; }
+        .product-image-wrapper { width: 120px; height: 120px; }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize New Arrivals carousels
+        $('.product-image-carousel').each(function () {
+            var $carousel = $(this);
+            var itemCount = $carousel.find('.carousel-item').length;
+            if (itemCount > 1) {
+                $carousel.carousel({ interval: 3500, wrap: true, pause: 'hover', ride: 'carousel' });
+            }
+        });
+
+        // Add to cart
+        $('.add-to-cart-btn').on('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var btn = $(this);
+            var data = {
+                ProductId: btn.data('product-id'),
+                Quantity: 1,
+                SelectedColor: btn.data('color') || null
+            };
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            btn.prop('disabled', true);
+            var originalHtml = btn.html();
+            btn.html('<i class="fas fa-spinner fa-spin"></i>');
+            $.ajax({
+                url: '/cart/add-to-cart',
+                type: 'POST',
+                data: data,
+                headers: { 'RequestVerificationToken': token },
+                success: function (res) {
+                    if (res.success) {
+                        showToast(btn.data('product-name') + ' added!', 'success');
+                        if (typeof updateCartBadge === 'function') updateCartBadge();
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                },
+                error: function () { showToast('Error adding to cart', 'error'); },
+                complete: function () { btn.prop('disabled', false); btn.html(originalHtml); }
+            });
+        });
+
+        // Orientation for videos (portrait fills like images)
+        function markVideoOrientation(video) {
+            if (video.readyState >= 1 && video.videoWidth && video.videoHeight) {
+                var w = video.videoWidth, h = video.videoHeight;
+                if (h > w) {
+                    video.classList.add('is-portrait');
+                    video.classList.remove('is-landscape');
+                } else {
+                    video.classList.add('is-landscape');
+                    video.classList.remove('is-portrait');
+                }
+            } else {
+                video.addEventListener('loadedmetadata', function onMeta() {
+                    video.removeEventListener('loadedmetadata', onMeta);
+                    markVideoOrientation(video);
+                });
+            }
+        }
+        document.querySelectorAll('video.media-video').forEach(markVideoOrientation);
+
+        // Size the hero caption based on the displayed media area
+        function getAspectRatio(el) {
+            if (el.tagName.toLowerCase() === 'video') {
+                return (el.videoWidth && el.videoHeight) ? el.videoWidth / el.videoHeight : null;
+            }
+            if (el.tagName.toLowerCase() === 'img') {
+                return (el.naturalWidth && el.naturalHeight) ? el.naturalWidth / el.naturalHeight : null;
+            }
+            return null;
+        }
+        function computeDisplayedWidth(container, ar, fit) {
+            var cw = container.clientWidth;
+            var ch = container.clientHeight;
+            if (!ar || !cw || !ch) return cw; // fallback
+            var containerAR = cw / ch;
+            if (fit === 'contain') {
+                // Media fits entirely; one dimension may letterbox
+                if (containerAR > ar) {
+                    // container wider than media -> width limited by height
+                    return Math.round(ch * ar);
+                } else {
+                    // container narrower -> width fills container
+                    return cw;
+                }
+            } else {
+                // cover: usually fills width; use container width
+                return cw;
+            }
+        }
+        function sizeHeroCaption(slide) {
+            var media = slide.querySelector('.carousel-media');
+            var caption = slide.querySelector('.hero-caption');
+            var container = slide.classList.contains('hero-item') ? slide : slide.closest('.hero-item') || slide;
+            if (!media || !caption || !container) return;
+
+            var fit = getComputedStyle(media).objectFit || 'cover';
+            // For portrait videos on mobile we force cover, ensure JS respects it
+            if (media.classList.contains('is-portrait')) fit = 'cover';
+
+            var ar = getAspectRatio(media);
+            // If aspect ratio not ready (video metadata not loaded), try later
+            if (!ar) {
+                if (media.tagName.toLowerCase() === 'video') {
+                    media.addEventListener('loadedmetadata', function once() {
+                        media.removeEventListener('loadedmetadata', once);
+                        sizeHeroCaption(slide);
+                    });
+                } else if (media.tagName.toLowerCase() === 'img') {
+                    media.addEventListener('load', function once() {
+                        media.removeEventListener('load', once);
+                        sizeHeroCaption(slide);
+                    });
+                }
+                return;
+            }
+
+            var widthPx = computeDisplayedWidth(container, ar, fit);
+            // Pad slightly inside container and cap to container width
+            var cw = container.clientWidth;
+            widthPx = Math.min(widthPx, cw); // safety
+            // Apply width
+            caption.style.width = widthPx + 'px';
+        }
+
+        function sizeAllCaptions() {
+            document.querySelectorAll('#header-carousel .carousel-item').forEach(sizeHeroCaption);
+        }
+
+        // Initial sizing
+        sizeAllCaptions();
+
+        // Resize and slide events
+        window.addEventListener('resize', sizeAllCaptions);
+        $('#header-carousel').on('slid.bs.carousel', function () { sizeAllCaptions(); });
+
+        // Also re-size after orientation mark (videos)
+        document.querySelectorAll('video.media-video').forEach(function (v) {
+            v.addEventListener('loadedmetadata', function () { sizeAllCaptions(); });
+        });
+
+        // Make entire card clickable on mobile (except buttons/controls)
+        $('.product-card-clickable').on('click', function (e) {
+            if ($(window).width() < 768) {
+                if (!$(e.target).closest('.add-to-cart-btn, .carousel-control-prev, .carousel-control-next').length) {
+                    var url = $(this).data('product-url');
+                    if (url) window.location.href = url;
+                }
+            }
+        });
+
+        // Color dot hover effect
+        $('.color-dot').hover(
+            function () { $(this).css({ 'transform': 'scale(1.2)', 'box-shadow': '0 0 5px rgba(0,0,0,0.3)' }); },
+            function () { $(this).css({ 'transform': 'scale(1)', 'box-shadow': 'none' }); }
+        );
+
+        function showToast(message, type) {
+            var alertClass = type === 'success' ? 'alert-success' : (type === 'error' ? 'alert-danger' : 'alert-warning');
+            var toast = $('<div class="toast-alert alert ' + alertClass + ' alert-dismissible fade show position-fixed" style="top: 100px; right: 20px; z-index: 9999;">' +
+                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                '<strong>' + message + '</strong>' +
+                '</div>');
+            $('body').append(toast);
+            setTimeout(function () { toast.alert('close'); }, 3000);
+        }
+
+        // Reviews slider
+        const slides = document.querySelectorAll('.review-slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        let currentSlide = 0;
+        let autoSlideInterval;
+        if (slides.length === 0) return;
+        slides[0].classList.add('active');
+
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => d.classList.remove('active'));
+            currentSlide = index;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function startAutoSlide() { autoSlideInterval = setInterval(nextSlide, 5000); }
+        function stopAutoSlide() { clearInterval(autoSlideInterval); }
+        startAutoSlide();
+
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', function () {
+                stopAutoSlide();
+                showSlide(idx);
+                startAutoSlide();
+            });
+        });
+
+        const sliderContainer = document.querySelector('.reviews-slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', stopAutoSlide);
+            sliderContainer.addEventListener('mouseleave', startAutoSlide);
+        }
+
+        // Touch support
+        let touchStartX = 0, touchEndX = 0;
+        const slider = document.querySelector('.reviews-slider');
+        if (slider) {
+            slider.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
+            slider.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchStartX - touchEndX;
+                if (Math.abs(diff) > 50) {
+                    stopAutoSlide();
+                    if (diff > 0) showSlide(currentSlide + 1); else showSlide(currentSlide - 1);
+                    startAutoSlide();
+                }
+            }, false);
+        }
+    });
+
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categoryCards = document.querySelectorAll('.category-card');
+
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    function closeAllCards(exceptCard = null) {
+        categoryCards.forEach(card => {
+            if (card !== exceptCard) {
+                card.classList.remove('active');
+            }
+        });
+    }
+
+    categoryCards.forEach(card => {
+        // Use click instead of touchend for better reliability
+        card.addEventListener('click', function (event) {
+            if (!isMobile()) return; // Let hover handle desktop
+
+            const link = card.querySelector('.stretched-link');
+            
+            if (!card.classList.contains('active')) {
+                // First tap: show overlay, prevent navigation
+                event.preventDefault();
+                event.stopPropagation();
+                closeAllCards(card);
+                card.classList.add('active');
+            } else {
+                // Second tap: allow navigation to category page
+                // Don't prevent default - let the link work
+            }
+        });
+    });
+
+    // Close overlay when tapping outside
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.category-card')) {
+            closeAllCards();
+        }
+    });
+
+    // Close on resize if switching to desktop
+    window.addEventListener('resize', function () {
+        if (!isMobile()) {
+            closeAllCards();
+        }
+    });
+});
+</script>

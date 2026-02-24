@@ -1,0 +1,26 @@
+﻿<!-- Views/Shared/_ToastNotifications.cshtml -->
+<div id="toast-container" class="position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+    <!-- Toasts will be inserted here -->
+</div>
+
+<script>
+    // Global toast function
+    window.showToast = function(message, type) {
+        var toastId = 'toast-' + Date.now();
+        var toastHtml = `
+            <div id="${toastId}" class="toast-alert alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+
+        $('#toast-container').append(toastHtml);
+
+        // Auto-remove after 3 seconds
+        setTimeout(function() {
+            $('#' + toastId).alert('close');
+        }, 3000);
+    };
+</script>
