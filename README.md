@@ -187,4 +187,4 @@ export Paymob__ApiKey="prod-api-key"
 Proprietary and confidential. Unauthorized use prohibited.
 
 ## 📧 Contact
-For support, contact the development team.
+For support or inquiries, connect on LinkedIn: [Maiar Hussein](https://www.linkedin.com/in/maiar-hussein/)
